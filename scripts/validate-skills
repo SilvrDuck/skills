@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+"""Validate skill SKILL.md files for cross-tool (Claude Code / OpenCode / Codex / Pi) portability,
+verify the canonical skills/ directory and its symlinks, and check that the README's skills
+table has an entry for every skill on disk.
+"""
+from pathlib import Path
+import re
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+SKILLS = ROOT / "skills"
+README = ROOT / "README.md"
+FM = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.S)
+NAME = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$")
+SYMLINK_PATHS = [".agents/skills", ".claude/skills", "plugins/silvrduck/skills"]
+README_LINK = re.compile(r"\(skills/([^/)]+)/SKILL\.md\)")
+
+
+def scalar(frontmatter: str, key: str) -> str | None:
+    m = re.search(rf"(?m)^{re.escape(key)}:\s*(.*)$", frontmatter)
+    if not m:
+        return None
+    value = m.group(1).strip()
+    if value in (">", "|", ">-", "|-", ">+", "|+"):
+        return "multiline"
+    return value.strip('"\'')
+
+
+def validate_skill(file: Path) -> int:
+    rel = file.relative_to(ROOT)
+    errors = 0
+    text = file.read_text(encoding="utf-8")
+    match = FM.match(text)
+    if not match:
+        print(f"ERROR {rel}: missing YAML frontmatter")
+        return 1
+    frontmatter = match.group(1)
+    name = scalar(frontmatter, "name")
+    description = scalar(frontmatter, "description")
+    if not name:
+        print(f"ERROR {rel}: missing required 'name'")
+        errors += 1
+    elif not NAME.fullmatch(name):
+        print(f"ERROR {rel}: invalid name '{name}'")
+        errors += 1
+    elif name != file.parent.name:
+        print(f"ERROR {rel}: name '{name}' must match directory '{file.parent.name}'")
+        errors += 1
+    if not description:
+        print(f"ERROR {rel}: missing required 'description'")
+        errors += 1
+    elif description != "multiline":
+        if len(description) < 10:
+            print(f"ERROR {rel}: description must be at least 10 characters")
+            errors += 1
+        if len(description) > 2048:
+            print(f"WARN  {rel}: description is longer than 2048 chars")
+
+    nested = [p for p in file.parent.rglob("SKILL.md") if p != file]
+    if nested:
+        for n in nested:
+            print(f"ERROR {n.relative_to(ROOT)}: nested SKILL.md not allowed (one per skill directory)")
+        errors += len(nested)
+    return errors
+
+
+def validate_layout() -> int:
+    """skills/ must be a real directory; the three tool-facing paths must symlink to it."""
+    errors = 0
+    if SKILLS.is_symlink() or not SKILLS.is_dir():
+        print("ERROR skills/: canonical directory must be a real directory at the repo root")
+        return 1
+    canonical = SKILLS.resolve()
+    for rel in SYMLINK_PATHS:
+        p = ROOT / rel
+        if not p.is_symlink():
+            print(f"ERROR {rel}: must be a symlink to skills/")
+            errors += 1
+            continue
+        try:
+            resolved = p.resolve()
+        except OSError:
+            print(f"ERROR {rel}: symlink does not resolve")
+            errors += 1
+            continue
+        if resolved != canonical:
+            print(f"ERROR {rel}: resolves to {resolved}, expected {canonical}")
+            errors += 1
+    return errors
+
+
+def validate_readme_table(skill_names: set[str]) -> int:
+    """Every skill in skills/ MUST have a markdown link to its SKILL.md in the README,
+    and the README MUST NOT link to skills that don't exist on disk."""
+    if not README.is_file():
+        print("ERROR README.md: missing")
+        return 1
+    text = README.read_text(encoding="utf-8")
+    linked = set(README_LINK.findall(text))
+    errors = 0
+    for name in sorted(skill_names - linked):
+        print(f"ERROR README.md: skill '{name}' has no entry in the skills table (expected a link to skills/{name}/SKILL.md)")
+        errors += 1
+    for name in sorted(linked - skill_names):
+        print(f"ERROR README.md: skills table links to 'skills/{name}/SKILL.md' but no such skill exists")
+        errors += 1
+    return errors
+
+
+def main() -> int:
+    files = sorted(SKILLS.glob("*/SKILL.md")) if SKILLS.is_dir() else []
+    errors = sum(validate_skill(f) for f in files)
+    errors += validate_layout()
+    errors += validate_readme_table({f.parent.name for f in files})
+    print(f"Validated {len(files)} skills with {errors} error(s).")
+    return 1 if errors else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

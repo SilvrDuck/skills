@@ -1,0 +1,5 @@
+[ Client ] -> [ Gateway ] { label: request; }
+[ Gateway ] -> [ Service ] { label: call; }
+[ Service ] -> [ Database ] { label: query; }
+[ Service ] -> [ Gateway ] { label: response; }
+[ Gateway ] -> [ Client ] { label: response; }

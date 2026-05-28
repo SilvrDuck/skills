@@ -1,0 +1,11 @@
+{
+  "name": "silvrduck",
+  "description": "SilvrDuck's personal collection of Claude Code skills.",
+  "author": {
+    "name": "SilvrDuck"
+  },
+  "homepage": "https://github.com/SilvrDuck/skills",
+  "repository": "https://github.com/SilvrDuck/skills",
+  "license": "MIT",
+  "keywords": ["skills", "agent-skills", "diagrams", "git", "debugging"]
+}

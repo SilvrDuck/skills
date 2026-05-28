@@ -1,0 +1,12 @@
+direction: down
+
+client: Client
+gw: Gateway
+svc: Service
+db: Database
+
+client -> gw: request
+gw -> svc: call
+svc -> db: query
+svc -> gw: response
+gw -> client: response

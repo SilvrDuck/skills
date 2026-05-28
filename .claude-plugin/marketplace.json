@@ -1,0 +1,25 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "silvrduck-skills",
+  "description": "SilvrDuck's personal Claude Code skills and agent skills.",
+  "homepage": "https://github.com/SilvrDuck/skills",
+  "repository": "https://github.com/SilvrDuck/skills",
+  "owner": {
+    "name": "SilvrDuck"
+  },
+  "plugins": [
+    {
+      "name": "silvrduck",
+      "description": "A personal collection of skills for Claude Code and other Agent Skills-compatible tools.",
+      "author": {
+        "name": "SilvrDuck"
+      },
+      "category": "development",
+      "keywords": ["skills", "agent-skills", "diagrams", "git", "debugging", "creativity"],
+      "source": "./plugins/silvrduck",
+      "homepage": "https://github.com/SilvrDuck/skills",
+      "repository": "https://github.com/SilvrDuck/skills",
+      "license": "MIT"
+    }
+  ]
+}

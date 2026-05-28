@@ -1,0 +1,26 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate skills
+        run: ./scripts/validate-skills
+
+      - name: Validate marketplace.json
+        run: python -m json.tool < .claude-plugin/marketplace.json > /dev/null
+
+      - name: Validate plugin.json
+        run: python -m json.tool < plugins/silvrduck/.claude-plugin/plugin.json > /dev/null

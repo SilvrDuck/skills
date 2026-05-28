@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# Scaffold a new skill under skills/<name>/SKILL.md.
+# Validates the name and writes a minimally-valid SKILL.md template.
+set -euo pipefail
+
+usage() {
+  cat >&2 <<EOF
+Usage: $(basename "$0") <skill-name>
+
+  skill-name: lowercase a-z 0-9 -, 1-64 chars, no leading/trailing hyphen,
+              no consecutive '--'. Must be a valid Agent Skill name.
+
+Creates skills/<skill-name>/SKILL.md with a valid
+frontmatter and a TODO body for you to fill in.
+EOF
+  exit 2
+}
+
+[[ $# -eq 1 ]] || usage
+name="$1"
+
+# Validate name format.
+if [[ ! "$name" =~ ^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$ ]]; then
+  echo "ERROR: invalid skill name '$name'" >&2
+  echo "       must be 1-64 chars, lowercase a-z 0-9 -, no leading/trailing hyphen" >&2
+  exit 1
+fi
+if [[ "$name" == *--* ]]; then
+  echo "ERROR: skill name '$name' has consecutive hyphens" >&2
+  exit 1
+fi
+
+# Locate the repo root from the script's own path.
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd "$script_dir/../../.." && pwd)"
+skills_dir="$repo_root/skills"
+
+if [[ ! -d "$skills_dir" ]]; then
+  echo "ERROR: expected canonical skills dir at $skills_dir" >&2
+  echo "       run this script from a clone of github.com/SilvrDuck/skills" >&2
+  exit 1
+fi
+
+target="$skills_dir/$name"
+if [[ -e "$target" ]]; then
+  echo "ERROR: $target already exists" >&2
+  exit 1
+fi
+
+mkdir -p "$target"
+cat > "$target/SKILL.md" <<EOF
+---
+name: $name
+description: TODO — one-line what the skill does. Use when TODO triggers/contexts/natural phrases the user would say. Be pushy — call this skill any time the user mentions TODO, even implicitly.
+---
+
+# $name
+
+TODO 2-sentence intro: what this skill is for.
+
+## Quick reference
+
+| Want to … | Do this |
+|---|---|
+| TODO | TODO |
+
+## TODO core section
+
+TODO the technique, rules, or steps.
+
+## Anti-patterns
+
+- TODO
+EOF
+
+echo "Created $target/SKILL.md"
+echo ""
+echo "Next steps:"
+echo "  1. Edit the 'description' field — it's the only thing always in context, so it"
+echo "     IS the trigger. State what AND when, include natural keywords."
+echo "  2. If the skill takes a positional argument (e.g. /$name something), add"
+echo "     an 'argument-hint' frontmatter line, e.g. argument-hint: \"[topic — optional]\""
+echo "  3. Fill in the body. Keep it under ~300 lines."
+echo "  4. Validate: $repo_root/scripts/validate-skills"
