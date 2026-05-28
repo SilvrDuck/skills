@@ -14,6 +14,7 @@ Personal repo, issues for bugs or out-of-date info are welcome, see [CONTRIBUTIN
 | [be-creative](skills/be-creative/SKILL.md) | Experimental skill to try to make an LLM actually creative through random wikipedia pages. |
 | [defossil](skills/defossil/SKILL.md) | Strip conversation fossils, the annoying way LLMs still reference your conversation in the way they document and comment. |
 | [scorched-earth-mode](skills/scorched-earth-mode/SKILL.md) | Agents are always trying to keep compatibilty with the poorly speced stuff you added at the start of the project. Ask them to be more radical in refactors. |
+| [inquisitor](skills/inquisitor/SKILL.md) | A sort of mini spec definer when you want the LLM to quizz you so that you can define something. |
 | [handout](skills/handout/SKILL.md) | Dump the current conversation as a self-contained Markdown brief so a fresh LLM can pick up the work. Includes project context. |
 | [handcraft](skills/handcraft/SKILL.md) | For when I am tired of vibe coding. Work function by function with the agent. |
 | [conventional-git](skills/conventional-git/SKILL.md) | Conventional Commits + Conventional Branches cheat sheet. |
