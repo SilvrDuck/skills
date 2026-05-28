@@ -1,6 +1,6 @@
 ---
 name: scorched-earth-mode
-description: Manual-only opt-in stance for projects still iterating. When active, flips the agent's default toward hard-replace at every scale (architecture, conceptual model, schema, API surface, scope of change, and small-pattern phantoms) — no compat shims, deprecation warnings, parallel old/new paths, migration code for empty databases, "kept for compatibility" stubs, or "leave migration for later" abstractions. Two activation paths only — (a) the project's CLAUDE.md / AGENTS.md declares scorched-earth mode is on, in which case the agent reads that and applies the stance automatically; (b) the user invokes `/scorched-earth-mode` or asks to enable / rip-and-replace / raze, in which case the skill activates AND writes the declaration into the instruction file so future sessions inherit it, announcing both to the user. Silence in the instruction file = mode is OFF. Do NOT auto-invoke on generic planning, scoping, or refactor brainstorms. `disable-model-invocation: true` is set so Claude Code enforces the manual gate; on other tools the narrow trigger phrases serve the same role.
+description: Manual-only opt-in stance for projects still iterating. When active, flips the agent's default toward hard-replace at every scale (architecture, conceptual model, schema, API surface, scope of change, and small-pattern phantoms) — no compat shims, deprecation warnings, parallel old/new paths, migration code for empty databases, "kept for compatibility" stubs, or "leave migration for later" abstractions. Two activation paths only — (a) the project's CLAUDE.md / AGENTS.md declares scorched-earth mode is on, in which case the agent reads that and applies the stance automatically; (b) the user invokes `/scorched-earth-mode` or asks to enable / rip-and-replace / raze, in which case the skill activates AND persists the declaration so future sessions inherit it — via a SessionStart hook where the harness supports one (e.g. Claude Code), otherwise into the instruction file — announcing the change to the user. Silence in the instruction file = mode is OFF. Do NOT auto-invoke on generic planning, scoping, or refactor brainstorms. `disable-model-invocation: true` is set so Claude Code enforces the manual gate; on other tools the narrow trigger phrases serve the same role.
 disable-model-invocation: true
 argument-hint: "[on | off — defaults to on]"
 ---
@@ -15,46 +15,41 @@ The name is the point: when this mode is on, the project's prior structure is tr
 
 ---
 
-## Activation: two paths, no ambiguity
+## Activation: opt-in, persisted through the best available channel
 
-The mode is opt-in. The skill itself is gated by `disable-model-invocation: true`, so the agent never auto-fires it from a description match. There are only two ways scorched-earth becomes active for a project:
+The mode is opt-in. The skill is gated by `disable-model-invocation: true`, so the agent never auto-fires it from a description match. Scorched-earth is active for a project whenever its declaration is present in the session context at startup — turning it on means persisting that declaration so every future session inherits it.
 
-### Path A — declared in the instruction file
-
-The project's `CLAUDE.md` (or `AGENTS.md`, or the relevant equivalent) contains a clear declaration that scorched-earth mode is on. The agent reads the instruction file at session start, sees the declaration, and applies the stance to every code-modification turn for the rest of the session. The skill itself doesn't need to be invoked — the declaration alone carries the load. Invoking `/scorched-earth-mode` while a declaration is already in place is a no-op confirmation (announce that it's already active, show the declaration line, exit).
-
-The canonical declaration shape — append once, somewhere in the project's CLAUDE.md:
+**The payload is the same through every channel** — this canonical declaration:
 
 ```markdown
 ## Scorched-earth mode: ON
-No shipped v2, no external dependents. Hard-replace is allowed at every
-scale (architecture, conceptual model, schema, API, naming). Do not add
-compat shims, deprecation warnings, parallel old/new paths, migration
-code for empty databases, or "kept for compatibility" stubs without
-explicit instruction. When the cleanest implementation would drop a
-prior constraint at any scale, surface the conflict and ASK before
-acting.
+Scorched-earth mode activated — you must always read the `scorched-earth-mode` skill first.
 ```
 
-### Path B — user enables this session
+### Inheriting it (already on)
 
-The user invokes `/scorched-earth-mode`, types something like "turn on scorched-earth for this project", or asks to "rip and replace" / "raze the old code." The skill activates and, **in the same turn, auto-appends the canonical declaration above to the project's instruction file** (CLAUDE.md at the project root unless the user specifies otherwise). Then announce both, explicitly:
+A later session sees the declaration with no invocation needed — a SessionStart hook injects it, or the agent reads it from the instruction file at startup — and applies the stance to every code-modification turn for the rest of the session. Invoking `/scorched-earth-mode` while it's already on is a no-op confirmation: announce it's active, cite where the state lives, exit.
 
-> "🔥 Scorched-earth mode is on. I've appended the declaration to `CLAUDE.md` so future sessions inherit it. Run `/scorched-earth-mode off` to remove it."
+### Turning it on (`/scorched-earth-mode`, "rip and replace", "raze the old code")
 
-Auto-write is the default — opt-in is consent. But never *silent*: the announcement is non-negotiable so the user knows the instruction file just changed. If the project has no CLAUDE.md / AGENTS.md at all, create the file with that section as the first content and announce it.
+Persist the declaration through the most reliable channel the harness offers — **check capability, then pick one**:
 
-### Disabling (`/scorched-earth-mode off`)
+- **Harness with session-start hooks (e.g. Claude Code).** Write the declaration to a marker file (`.claude/scorched-earth.md`) and add — idempotently — a `SessionStart` hook that injects the marker's contents whenever it exists. The harness then *guarantees* the stance reaches every future session, so it never depends on the agent choosing to read a file, and `CLAUDE.md` stays clean. Exact config and idempotency rules: [references/hook-setup.md](references/hook-setup.md).
+- **Any other harness (no hooks).** Append the declaration block to the project's instruction file — `CLAUDE.md` at the project root (or `AGENTS.md` / equivalent) unless the user says otherwise. Create the file with this block as its first content if none exists.
 
-Remove the declaration block from the instruction file. Announce:
+Either way, **announce the change — never silent.** Auto-write is the default; opt-in is consent, but the user must see what changed:
 
-> "🔥 Scorched-earth mode is off. Removed the declaration from `CLAUDE.md`."
+> 🔥 Scorched-earth mode is on. Installed a SessionStart hook that injects the stance each session (marker: `.claude/scorched-earth.md`). Run `/scorched-earth-mode off` to remove it.
 
-If the declaration isn't there, say so and exit without writing.
+> 🔥 Scorched-earth mode is on. Appended the declaration to `CLAUDE.md` so future sessions inherit it. Run `/scorched-earth-mode off` to remove it.
+
+### Turning it off (`/scorched-earth-mode off`)
+
+Reverse whichever channel is in use: delete the `.claude/scorched-earth.md` marker (the hook goes inert — leave the hook itself in place), or remove the declaration block from the instruction file. Announce what changed. If neither is present, say so and exit without writing.
 
 ### Silence = off
 
-If the instruction file is silent and the user hasn't invoked the skill, the mode is **off**. The agent does not lean toward hard-replace, does not ask the user whether the project is in scorched-earth mode, and does not infer the mode from heuristics (release tags, file counts, commit history). Silence is a clear signal, not an invitation to guess.
+No marker, no declaration in the instruction file, and no invocation this session → the mode is **off**. The agent does not lean toward hard-replace, does not ask whether the project is in scorched-earth mode, and does not infer the mode from heuristics (release tags, file counts, commit history). Silence is a clear signal, not an invitation to guess.
 
 ---
 
@@ -159,16 +154,19 @@ If during a task you discover that the project actually has shipped to external 
 Every invocation of `/scorched-earth-mode` starts with one banner line stating the active state and **where it came from** (the source, not inferred signals):
 
 ```
+🔥 Scorched-earth — active (per SessionStart hook · .claude/scorched-earth.md)
+```
+```
 🔥 Scorched-earth — active (per CLAUDE.md)
 ```
 ```
-🔥 Scorched-earth — activating now (per user this turn — written to CLAUDE.md)
+🔥 Scorched-earth — activating now (per user this turn — SessionStart hook installed)
 ```
 ```
-🔥 Scorched-earth — off (declaration removed from CLAUDE.md)
+🔥 Scorched-earth — off (marker removed; hook now inert)
 ```
 
-The source is mandatory. Never write a banner that doesn't cite where the state came from.
+The source is mandatory, and it names the actual channel (hook + marker, or instruction file) — never inferred signals. Never write a banner that doesn't cite where the state came from.
 
 **Planning invocation, function/feature scale (mode active):**
 
@@ -226,7 +224,7 @@ One line is fine when there's nothing to report. Don't pad.
 ## Anti-patterns
 
 - ❌ Inferring the mode from git tags, release count, file count, or other heuristics. The mode is opt-in — declared in the instruction file or activated explicitly by the user. Heuristics aren't a substitute for either.
-- ❌ Silently writing to the instruction file. Auto-write on opt-in is the design, but the announcement is non-negotiable — the user must see which file was changed and what was added.
+- ❌ Silently writing to the instruction file or installing the hook. Auto-write on opt-in is the design, but the announcement is non-negotiable — the user must see which channel was used and what was added (which file / which `settings.json` hook).
 - ❌ Adding a compat shim "just in case." Either name the caller or delete the path. There is no just-in-case here.
 - ❌ Adding a new file inside the existing module layout when the layout itself is the thing to change. The bias to preserve structure runs strongest at the largest scale — that's exactly where to push back.
 - ❌ Introducing the new abstraction *alongside* the old one and "leaving migration for later." Scorched-earth does the migration in the same diff. Parallel old/new is the bug at concept scale, just as a re-export shim is the bug at name scale.
