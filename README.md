@@ -82,14 +82,6 @@ plugins/silvrduck/
 .claude/skills  →  ../skills              symlink (OpenCode, CC project scope)
 ```
 
-## Validate
-
-```bash
-./scripts/validate-skills
-```
-
-Checks: required frontmatter, name matches directory, description length, no nested `SKILL.md`, the `skills/` canonical + three-symlink layout, and that every skill on disk has a row in the README skills table. CI runs the same script on every push.
-
 ## License
 
 MIT — see [LICENSE](LICENSE).

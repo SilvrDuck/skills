@@ -17,7 +17,7 @@ Issues are always welcome: broken links, outdated install commands, a skill that
 ./scripts/validate-skills
 ```
 
-CI runs this on every push and pull request.
+Checks: required frontmatter, name matches directory, description length, no nested `SKILL.md`, the `skills/` canonical + three-symlink layout, and that every skill on disk has a row in the README skills table. CI runs this on every push and pull request.
 
 ## Commit style
 
