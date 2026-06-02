@@ -18,6 +18,7 @@ Personal repo, issues for bugs or out-of-date info are welcome, see [CONTRIBUTIN
 | [handout](skills/handout/SKILL.md) | Dump the current conversation as a self-contained Markdown brief so a fresh LLM can pick up the work. Includes project context. |
 | [handcraft](skills/handcraft/SKILL.md) | For when I am tired of vibe coding. Work function by function with the agent. |
 | [conventional-git](skills/conventional-git/SKILL.md) | Conventional Commits + Conventional Branches cheat sheet. |
+| [yolo](skills/yolo/SKILL.md) | Used to run a quick and dirty experiment to check feasability. It writes a local YOLO-LEARNIGS.md to use in your future speccing. |
 | [ascii-diagram-renderer](skills/ascii-diagram-renderer/SKILL.md) | Avoids typical LLM ASCII diagram mistakes by using [Graph Easy](https://github.com/ironcamel/Graph-Easy) |
 | [skill-creator](skills/skill-creator/SKILL.md) | Just my own tuning on your typical skill creator skill. |
 | [x](skills/x/SKILL.md) | Alias for `/doubt`, because that is what you press when you have one. |
