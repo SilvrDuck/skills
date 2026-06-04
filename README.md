@@ -20,6 +20,7 @@ Personal repo, issues for bugs or out-of-date info are welcome, see [CONTRIBUTIN
 | [conventional-git](skills/conventional-git/SKILL.md) | Conventional Commits + Conventional Branches cheat sheet. |
 | [yolo](skills/yolo/SKILL.md) | Used to run a quick and dirty experiment to check feasability. It writes a local YOLO-LEARNIGS.md to use in your future speccing. |
 | [ascii-diagram-renderer](skills/ascii-diagram-renderer/SKILL.md) | Avoids typical LLM ASCII diagram mistakes by using [Graph Easy](https://github.com/ironcamel/Graph-Easy) |
+| [align-check](skills/align-check/SKILL.md) | Lightweight tool to help the llm align its ascii schemas. Autoinvoked mostly. |
 | [skill-creator](skills/skill-creator/SKILL.md) | Just my own tuning on your typical skill creator skill. |
 | [x](skills/x/SKILL.md) | Alias for `/doubt`, because that is what you press when you have one. |
 
