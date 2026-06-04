@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: Author or revise a portable Agent Skill (SKILL.md) that works across Claude Code, OpenCode, Codex CLI, and Pi. Use when creating a new skill, scaffolding a SKILL.md, editing an existing skill's frontmatter or body, reviewing a skill for portability, or whenever the user asks to "make this a skill", "create a skill", "write a SKILL.md", or is about to add a directory under skills/ or plugins/<plugin>/skills/. Be pushy — call this skill any time skill creation is on the table, even if the user hasn't named it explicitly. Distills agentskills.io and Anthropic's official skill-creator guidance into the minimum you need to author one correctly.
+description: Author or revise a portable Agent Skill (SKILL.md) that works across Claude Code, OpenCode, Codex CLI, and Pi. Use when creating a new skill, scaffolding a SKILL.md, editing an existing skill's frontmatter or body, reviewing a skill for portability, or whenever the user asks to "make this a skill", "create a skill", "write a SKILL.md", or is about to add a directory under skills/ or plugins/<plugin>/skills/. Be pushy — call this skill any time skill creation is on the table, even if the user hasn't named it explicitly.
 argument-hint: "[skill name — optional]"
 ---
 
@@ -56,7 +56,7 @@ The description is the only thing always loaded into the agent's context. If it 
 # Vague — no triggers, no when
 description: Helps with PDFs.
 
-# Workflow summary — Claude may follow this and skip reading the body
+# Workflow summary — the agent may follow this and skip reading the body
 description: Use when extracting text — first parse, then OCR, then merge.
 
 # What + when + natural triggers
@@ -68,7 +68,7 @@ Rules:
 1. **State what AND when.** What the skill does AND the conditions/keywords that should activate it. Not just one.
 2. **Use natural keywords** the user would actually type, not internal jargon. ("tests are flaky", not "non-deterministic assertion timing").
 3. **Be pushy.** Skills undertrigger by default. Add a phrase like *"call this skill any time the user mentions X, even if they don't ask for it"*. This measurably helps.
-4. **Don't summarize the workflow.** Procedure belongs in the body. A description that lists steps becomes a shortcut Claude takes instead of reading the body.
+4. **Don't summarize the workflow.** Procedure belongs in the body. A description that lists steps becomes a shortcut the agent takes instead of reading the body.
 5. **Front-load the important triggers.** Long descriptions can be truncated by some tools (Claude Code caps the combined description block at ~1,536 chars).
 6. **Third person, "Use when…" opener.** Works across every target tool.
 
@@ -76,12 +76,15 @@ Iterate: too often → tighten triggers; too rarely → add more natural phrases
 
 ## Body structure
 
-The body loads on activation and stays in context for the rest of the session. Every line is a recurring token cost.
+The body loads on activation and stays in context for the rest of the session. Every line is a recurring token cost — and not just money. Past ~3K tokens or a few dozen distinct directives, agents follow instructions measurably *worse*, and an over-stuffed skill can leave the agent worse off than with no skill at all. Evidence + citations: [`references/context-budget.md`](references/context-budget.md).
 
 Targets:
 
 - ≤500 lines, ideally <300.
-- ≤5,000 tokens when activated.
+- ≤5,000 tokens when activated — fewer is better; degradation is measurable from ~3K.
+- **Few distinct directives.** Every "always/never/must" competes for adherence; pile them on and each one is followed less. Cut rules the agent doesn't need.
+- **Front-load the load-bearing rule.** Models attend to the start and end and lose the middle — put the one rule that must not be missed near the top, not buried.
+- **High-signal, not shortest.** Don't compress into generic stubs (that propagates errors); aim for the smallest *sufficient* set, not the fewest words.
 - Imperative voice. Standing instructions, not narration ("Always prefer X", not "I usually do X").
 
 A reasonable shape:
@@ -171,6 +174,7 @@ If a skill genuinely needs CC-only features to function, say so in the descripti
 ## See also
 
 - [`references/frontmatter.md`](references/frontmatter.md) — full frontmatter field reference (portable + CC-only).
+- [`references/context-budget.md`](references/context-budget.md) — why skills must stay lean (the research, with citations).
 - Open spec: <https://agentskills.io/specification>
 - Anthropic's official `skill-creator` (gold-standard authoring reference): <https://github.com/anthropics/skills/tree/main/skills/skill-creator>
 - Anthropic's official skill repo (exemplars): <https://github.com/anthropics/skills>
