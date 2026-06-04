@@ -6,18 +6,7 @@ compatibility: Requires d2 >= 0.7.1; graph-easy and plantuml optional
 
 # ASCII Diagram Renderer
 
-Use this skill whenever a response would benefit from a diagram, not only for README files. This includes diagrams shown directly in chat, diagrams embedded in Markdown, diagrams for docs/specs/issues/PRs, and diagrams intended for terminal-friendly output.
-
-## Activation policy
-
-Use this skill for:
-
-- Any request to draw, sketch, visualize, map, diagram, explain with boxes, or show a flow.
-- Any architecture, auth flow, service flow, data flow, deployment, network, dependency, or system interaction diagram.
-- Any ASCII, Unicode box-art, terminal, monospace, Markdown, README, PR, issue, doc, or code-comment diagram.
-- Any model-generated diagram that would otherwise require manual spacing or aligned arrows.
-
-Do not limit this skill to README-ready output. If the final answer is a normal chat message and it contains a diagram, use this skill.
+Produce text diagrams by rendering a source with a layout tool, then inspecting the result — never by hand-aligning boxes. When to reach for this skill is set by the description above; this body is how to do it well once you do.
 
 If the user explicitly asks for Mermaid, DOT, PlantUML, D2, or another source format, respect that format. Still apply this skill's style rules: short labels, simple layout, no broken geometry, and no hand-aligned final ASCII unless a renderer is unavailable.
 
