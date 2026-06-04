@@ -1,6 +1,6 @@
 ---
 name: yolo
-description: Throwaway spike to prove (or kill) a feature's riskiest unknown before committing to building it for real. Use when the user types /yolo, or says "spike this", "quick prototype to see if X is even possible", "just hack something to prove the critical path", or wants learnings now so the feature can be spec'd properly later. Skips security, tests, error handling, and polish; keeps a YOLO-LEARNINGS.md journal as the only deliverable; never intends to merge. Not for shipping work.
+description: Throwaway spike to prove (or kill) a feature's riskiest unknown before committing to building it for real. Use when the user types /yolo, or says "spike this", "quick prototype to see if X is even possible", "just hack something to prove the critical path", or wants learnings now so the feature can be spec'd properly later. Not for shipping work.
 disable-model-invocation: true
 argument-hint: "[what you're trying to find out]"
 ---

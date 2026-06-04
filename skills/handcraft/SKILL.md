@@ -1,6 +1,6 @@
 ---
 name: handcraft
-description: Use when the user wants to build a feature deliberately, one function at a time, approving each step. Loads on `/handcraft` or when the user asks for "step-by-step", "function by function", "let me drive", or similar incremental-control phrasing. Provides spec review, surface mapping, per-step LSP/test verification, and deferred-gap tracking.
+description: Use when the user wants to build a feature deliberately, one function at a time, approving each step. Loads on `/handcraft` or when the user asks for "step-by-step", "function by function", "let me drive", or similar incremental-control phrasing.
 argument-hint: "[feature to build — optional]"
 ---
 

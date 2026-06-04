@@ -1,6 +1,6 @@
 ---
 name: inquisitor
-description: Drive an adaptive interview — one question at a time — to pin down something the user wants to define, decide, or spec. Starts broad, lets each answer choose the next question (never a pre-written list), keeps going until everything is clear, then ends with a formatted summary the user approves or sends back. Uses the structured multiple-choice question widget when available. Use when the user types `/inquisitor`, or asks to "interview me", "ask me one question at a time", "help me figure out / flesh out / define / spec X", "pin down requirements", or says they have a vague idea they want made concrete. Be pushy — invoke whenever the user wants their own half-formed idea drawn out through questioning.
+description: Drive an adaptive interview — one question at a time — to pin down something the user wants to define, decide, or spec. Use when the user types `/inquisitor`, or asks to "interview me", "ask me one question at a time", "help me figure out / flesh out / define / spec X", "pin down requirements", or says they have a vague idea they want made concrete. Be pushy — invoke whenever the user wants their own half-formed idea drawn out through questioning.
 argument-hint: "[what you want to define — optional]"
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: ascii-diagram-renderer
-description: Use whenever the agent needs to draw, sketch, explain, or revise a diagram in any context, including chat replies, Markdown, README files, docs, specs, PR comments, issue comments, terminal output, architecture notes, and code comments. Applies to ASCII diagrams, Unicode box-art diagrams, box-and-arrow diagrams, architecture diagrams, system flows, network diagrams, service maps, dependency diagrams, and simple sequence-like flows. Generate a diagram source first, render it with D2, Graph::Easy, or PlantUML when possible, inspect the output, then present the rendered diagram; never hand-align final boxes.
+description: Use when the user explicitly asks to create, draw, or render a diagram, or when producing a substantial diagram for documentation — architecture diagrams, system flows, network maps, service maps, dependency graphs, sequence-like flows in READMEs, docs, or specs. Reserve for deliberate, documentation-grade diagrams and explicit requests; do not auto-trigger on every passing mention of a diagram.
 compatibility: Requires d2 >= 0.7.1; graph-easy and plantuml optional
 ---
 
