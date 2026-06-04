@@ -17,6 +17,7 @@ Personal repo, issues for bugs or out-of-date info are welcome, see [CONTRIBUTIN
 | [inquisitor](skills/inquisitor/SKILL.md) | A sort of mini spec definer when you want the LLM to quizz you so that you can define something. |
 | [handout](skills/handout/SKILL.md) | Dump the current conversation as a self-contained Markdown brief so a fresh LLM can pick up the work. Includes project context. |
 | [handcraft](skills/handcraft/SKILL.md) | For when I am tired of vibe coding. Work function by function with the agent. |
+| [walkthrough](skills/walkthrough/SKILL.md) | Debugger style walkthrough of a code base. Guided tour along the happy path. |
 | [conventional-git](skills/conventional-git/SKILL.md) | Conventional Commits + Conventional Branches cheat sheet. |
 | [yolo](skills/yolo/SKILL.md) | Used to run a quick and dirty experiment to check feasability. It writes a local YOLO-LEARNIGS.md to use in your future speccing. |
 | [ascii-diagram-renderer](skills/ascii-diagram-renderer/SKILL.md) | Avoids typical LLM ASCII diagram mistakes by using [Graph Easy](https://github.com/ironcamel/Graph-Easy) |
