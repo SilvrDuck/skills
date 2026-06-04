@@ -1,6 +1,6 @@
 ---
 name: doubt
-description: Use when the user types `/doubt` (optionally followed by a hunch like "I don't think X works with Y"). The user is flagging something you just did — or just claimed — as a possible smell: they suspect it's wrong but don't know the right answer. Re-examine it with fresh skepticism rather than defending or capitulating.
+description: Use when the user types `/doubt` (optionally followed by a hunch like "I don't think X works with Y"), or invokes the "press X to doubt" meme (`/x`, "press x", "X to doubt"). The user is flagging something you just did — or just claimed — as a possible smell: they suspect it's wrong but don't know the right answer. Re-examine it with fresh skepticism rather than defending or capitulating.
 argument-hint: "[hunch — optional]"
 ---
 
