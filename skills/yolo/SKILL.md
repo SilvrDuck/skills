@@ -14,7 +14,7 @@ Manual-only, on purpose: you opt into cutting corners for one spike.
 ## Flow
 
 1. **Frame the one question.** Name the thing that, if it doesn't work, kills the direction — the riskiest unknown. That's all the spike answers. Write it at the top of `YOLO-LEARNINGS.md`.
-2. **Branch.** Cut `spike/<short-kebab>` (see `conventional-git`). Pick the base — `main` or current branch — by what the spike builds on; ask the user if unsure. No PR, no merge intent.
+2. **Branch.** Cut a throwaway `spike/<short-kebab>` branch — the convention for research with no merge intent. Pick the base — `main` or current branch — by what the spike builds on; ask the user if unsure. No PR, no merge intent.
 3. **Spike it.** Skip everything that isn't the thing under test. Keep the path under test real. Journal as you go.
 4. **Finalize.** Write the verdict + what the real spec must address, then stop. No auto-handoff, no cleanup — the user decides what's next.
 

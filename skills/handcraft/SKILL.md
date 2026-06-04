@@ -87,7 +87,7 @@ If any check is `⚠️` or `❌`, ask one targeted question to resolve before c
 
 ### When the script doesn't fit
 
-The script's tool list is a best-effort default — it won't cover every language, ecosystem, or exotic setup. If the project is in a language the script doesn't know about, or if the script errors / returns obviously thin results for what you can see in the tree, **tell the user plainly** that the scripted pre-flight didn't cover their stack, and fall back to doing the checks yourself by emulating the same shape (guidelines, LSPs, formatters, runners, docs hints). Don't ask the user to enumerate their toolchain — figure it out, confirm what's ambiguous, and move on.
+The script's tool list is a best-effort default. If the project's language or setup isn't covered, or the script errors / returns obviously thin results, **tell the user plainly** the scripted pre-flight didn't cover their stack, then run the same checks yourself (guidelines, LSPs, formatters, runners, docs hints). Don't ask the user to enumerate their toolchain — figure it out, confirm what's ambiguous, move on.
 
 ---
 

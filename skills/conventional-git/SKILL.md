@@ -1,6 +1,6 @@
 ---
 name: conventional-git
-description: Use when writing a commit message or naming a new git branch in a project that follows Conventional Commits or Conventional Branches. Triggers on phrases like "commit this", "make a PR", "new branch", "what should I call this branch", or when about to run `git commit` / `git checkout -b` / `git switch -c` and the project's convention is unclear. Distills conventionalcommits.org and conventional-branch.github.io into the minimum a competent dev needs, plus the local `spike/` convention for throwaway research branches with no merge intent.
+description: Use when writing a commit message or naming a new git branch in a project that follows Conventional Commits or Conventional Branches. Triggers on phrases like "commit this", "make a PR", "new branch", "what should I call this branch", or when about to run `git commit` / `git checkout -b` / `git switch -c` and the project's convention is unclear. Also covers the local `spike/` convention for throwaway research branches with no merge intent.
 ---
 
 # Conventional Git

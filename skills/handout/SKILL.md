@@ -85,7 +85,6 @@ End your turn with:
 - **Dumping the transcript.** A handout is not a chat log. Synthesize.
 - **Vague primer.** "This is a web project" is worthless. Name the framework, the entry point, the thing being built.
 - **Skipping the ask.** A handout with no clear "what should the next model do?" is just a status report.
-- **Leaving conversation fossils** (see also: [[defossil]]). Don't write "we then realized…" — write what is true now.
+- **Leaving conversation fossils.** Don't write "we then realized…", "as we discussed", or "now uses X instead of Y" — write what's true now, as if the doc were produced in one shot.
 - **Inventing project facts.** If you're not sure what the project does, read the README, ask, or write "unknown — see <file>" rather than guess.
 - **Writing into a deep subdirectory** the user didn't ask for. Repo root is the default for a reason — it's findable.
-- **Forgetting the argument hint.** When the user runs `/handout` bare, always mention the `<question>` form once. This is how they learn the feature exists.

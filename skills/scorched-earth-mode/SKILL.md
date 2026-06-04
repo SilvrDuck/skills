@@ -72,11 +72,7 @@ A few of these benefit from a concrete shape, because the LLM-bias at large scal
 
 **Conceptual model — looks like:** the codebase is organized around a single `Document` type with seven `kind` fields. The feature you're adding makes two of those `kind`s clearly different objects. The LLM bias is to add an eighth field. The scorched-earth move: "want me to split `Document` into `Source` and `View`? It'll touch a lot of call sites but the model becomes coherent."
 
-**Data shape — looks like:** a `users` table has `name` (free-text) and you're asked to support given/family separately. The LLM adds `given_name` and `family_name` *alongside* `name` and adds a sync trigger. Scorched-earth: drop `name`, add the new columns, update every reader in the same diff. The DB is empty; there is nothing to migrate.
-
-**API surface — looks like:** a function takes `(items, opts)` and a new option is needed. The LLM adds `opts.new_thing` with a default and a branch on its presence. Scorched-earth: change the signature to match the new shape; update every caller. No optional parameter exists "for compat with old callers" — the callers are all in this repo and they're all getting updated now.
-
-**Scope of change — looks like:** the user asks to fix a bug. The local fix is three lines; the bug exists because the surrounding 40 lines try to do something the wrong way. The LLM picks the three-line patch and adds a comment about it. Scorched-earth: when the surrounding mess *is* the bug, rewrite the surrounding 40 lines. Files-touched is not a cost here; phantom-user cost is. And `git` is the fallback for anything deleted.
+(Data shape, API surface, and scope-of-change follow the same pattern — the table above already names the move for each.)
 
 The point cuts across all six tiers: **a diff that preserves both the old shape and the new shape — at any scale — is a failed scorched-earth pass.** The hard-replace is the whole point.
 
