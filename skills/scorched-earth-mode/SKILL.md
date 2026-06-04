@@ -39,9 +39,9 @@ Persist the declaration through the most reliable channel the harness offers —
 
 Either way, **announce the change — never silent.** Auto-write is the default; opt-in is consent, but the user must see what changed:
 
-> 🔥 Scorched-earth mode is on. Installed a SessionStart hook that injects the stance each session (marker: `.claude/scorched-earth.md`). Run `/scorched-earth-mode off` to remove it.
+> Scorched-earth mode is on. Installed a SessionStart hook that injects the stance each session (marker: `.claude/scorched-earth.md`). Run `/scorched-earth-mode off` to remove it.
 
-> 🔥 Scorched-earth mode is on. Appended the declaration to `CLAUDE.md` so future sessions inherit it. Run `/scorched-earth-mode off` to remove it.
+> Scorched-earth mode is on. Appended the declaration to `CLAUDE.md` so future sessions inherit it. Run `/scorched-earth-mode off` to remove it.
 
 ### Turning it off (`/scorched-earth-mode off`)
 
@@ -151,28 +151,11 @@ If during a task you discover that the project actually has shipped to external 
 
 ## Output shape
 
-Every invocation of `/scorched-earth-mode` starts with one banner line stating the active state and **where it came from** (the source, not inferred signals):
+When the mode is active, lead with the work itself — the plan, diff, or cleanup below. The skill prints a status line in exactly two cases: the one-time announcement when the mode is toggled on or off (see Activation above), and a one-line confirmation when the user runs `/scorched-earth-mode` to check state. Everything else is just the diff.
+
+**Planning, function/feature scale (mode active):**
 
 ```
-🔥 Scorched-earth — active (per SessionStart hook · .claude/scorched-earth.md)
-```
-```
-🔥 Scorched-earth — active (per CLAUDE.md)
-```
-```
-🔥 Scorched-earth — activating now (per user this turn — SessionStart hook installed)
-```
-```
-🔥 Scorched-earth — off (marker removed; hook now inert)
-```
-
-The source is mandatory, and it names the actual channel (hook + marker, or instruction file) — never inferred signals. Never write a banner that doesn't cite where the state came from.
-
-**Planning invocation, function/feature scale (mode active):**
-
-```
-🔥 Scorched-earth — active (per <source>)
-
 Plan (hard-replace stance):
 - <step 1 — replacement, not addition>
 - <step 2 — deletion of old path>
@@ -182,13 +165,11 @@ Compat I'm NOT adding:
 - <shim/flag/migration the LLM would have reflexively added, with one-line reason it isn't needed>
 ```
 
-**Planning invocation, architectural scale (mode active):**
+**Planning, architectural scale (mode active):**
 
 Use this shape when the move is a restructure, a model split, a schema reshape, or anything that touches the bones of the codebase rather than the leaves.
 
 ```
-🔥 Scorched-earth — active (per <source>)
-
 Replacing at scale: <architecture | concept | schema | api | scope>
 
 Plan:
@@ -200,11 +181,9 @@ Not preserving:
 - <prior structure/abstraction/schema being dropped> — <one-line reason it isn't load-bearing>
 ```
 
-**Cleanup invocation (mode active, on existing code):**
+**Cleanup (mode active, on existing code):**
 
 ```
-🔥 Scorched-earth — active (per <source>)
-
 Ripping out (<n>):
 - <path>:<line> — <pattern>
   was: <quoted snippet>
