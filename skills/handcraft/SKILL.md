@@ -189,7 +189,7 @@ If any LSP error, read it and judge whether it's expected — i.e. caused by a s
   (f)ix it / (k)eep — it's expected / (a)ccept and move on / notes
 ```
 
-`(k)eep` means "you misread this, it's expected red, stop flagging it" — adjust your judgment for the next turn. `(a)ccept` is the old escape hatch — move on without naming why.
+`(k)eep` means "you misread this, it's expected red, stop flagging it" — adjust your judgment for the next turn. `(a)ccept` is the catch-all escape hatch — move on without naming why.
 
 **No LSP covers the touched file's language:** soft warn per step, do not block:
 
