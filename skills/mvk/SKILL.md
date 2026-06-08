@@ -17,7 +17,7 @@ The deliverable is a single self-contained, interactive **HTML mini-site** the u
 
 1. **QCM first — always, before any research.** Ask a few quick multiple-choice questions to fix two things: the user's **motive** (to buy gear / to hold a conversation / to start doing it / pure curiosity) and the exact **slice** of the field (narrow broad topics — "photography" → film vs digital vs phone). Use the harness's question widget if it has one. Don't ask their level or how deep — the level is fixed at "lurker."
 2. **Research** the field, community-tuned (below).
-3. **Build** the HTML site, save it in the working dir, and tell the user the path.
+3. **Build** the HTML site, save it to `/tmp` (fall back to the working dir if `/tmp` isn't writable), and tell the user the full path.
 
 ## Research
 
