@@ -26,7 +26,7 @@ What the flags do, briefly, so you understand what to keep vs. tweak:
 - `prop=info&inprop=url`: include the canonical URL.
 - The `python3 -c` step extracts just `title`, `fullurl`, `extract` and prints them as three lines. Nothing else (no IDs, no revision metadata, no `pageprops`, no `continue` tokens) enters your context.
 
-If the command fails, do **not** retry in a loop or fall back to a hard-coded list. If the host is blocked (sandboxed network), ask the user to open `https://en.wikipedia.org/wiki/Special:Random` and paste back the URL it lands on, then use that article as the seed. Otherwise (network down, rate-limited), say why and hard fail.
+If the command fails, do **not** retry in a loop or fall back to a hard-coded list. The seed must come from this curl or from the user — **never** from your own web-search, web-fetch, or hand-picked article/number. The instant *you* choose the seed you reintroduce the exact bias this skill exists to remove, so a self-picked seed is worse than not running the skill at all; "too cumbersome for a quick question" is not an exception. So if the host is blocked (sandboxed network), stop and ask the user to open `https://en.wikipedia.org/wiki/Special:Random` and paste back the URL it lands on, then use that article as the seed. Otherwise (network down, rate-limited), say why and hard fail.
 
 ### 2. Find an oblique connection
 
