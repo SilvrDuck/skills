@@ -56,6 +56,7 @@ One self-contained `.html` file — inline CSS/JS, no build step, opens by doubl
 - A **spec-sheet decoder** for the buying guide — each key spec laid out with what it controls, what to look for, and how much is "enough" for casual vs serious use. A comparison table fits well, but its rows are *specs and criteria*, not curated products.
 - A **point-of-sale checklist** for the buying guide — the few specs to verify and questions to ask at the counter, condensed to glance at on a phone in the shop.
 - A **self-quiz / flashcards** over the lingo, people, and debates ("are you lurker-fluent yet?").
+- **Hover-glossed jargon — every term, Wikipedia-style.** Wherever a piece of lingo, slang, or an abbreviation appears in the prose, wrap it so hovering reveals a *supra-short* one-line gloss — a styled `<abbr title="…">` or tooltip span. Applies to inline jargon only; **not** to hyperlinks or link cards.
 - **Real images throughout — not a text wall.** Embed photos with `<img>` (people, gear, logos, iconic moments) using only the **verified** URLs from research, plus galleries and clickable link cards. You can't download files and don't need to — hotlink the remote URL. Give every `<img>` an **`onerror` fallback** so any dead link degrades to a clean captioned placeholder, never a raw alt-text box.
 - **Visual aids wherever they help** — timelines, a landscape map of the players, brand family trees, spec-vs-price curves. Invent the ones that fit the field; this list is a floor, not a ceiling.
 
@@ -70,5 +71,6 @@ Make it look like a real little website, not a worksheet. Be creative.
 - ❌ Guessing or constructing image URLs (especially Wikimedia `.../thumb/<hash>/...` paths) — embed only URLs you've fetched and confirmed load, or you get boxes of alt text. A text-only site is just as much a failed run.
 - ❌ Stating a checkable fact (a rule, stat, date, named incident, price) with no clickable source — the reader can't trust it or dig in. Cite the hard claims; leave vibe uncited.
 - ❌ Narrating in heavy in-group slang — that's what the glossary and memes tabs are for.
+- ❌ Inline jargon or abbreviations with no hover gloss — every term in the prose carries a supra-short tooltip; links don't.
 - ❌ Stale, undated buying advice.
 - ❌ Fact-check rabbit holes — this is lurker-level cultural fluency, not journalism.
