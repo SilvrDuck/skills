@@ -26,7 +26,7 @@ What the flags do, briefly, so you understand what to keep vs. tweak:
 - `prop=info&inprop=url`: include the canonical URL.
 - The `python3 -c` step extracts just `title`, `fullurl`, `extract` and prints them as three lines. Nothing else (no IDs, no revision metadata, no `pageprops`, no `continue` tokens) enters your context.
 
-If the command fails (network down, rate-limited, sandbox blocks the host), do **not** retry in a loop and do **not** fall back to a hard-coded list. Instead, explicitly say why you could not run. Hard fail.
+If the command fails, do **not** retry in a loop or fall back to a hard-coded list. If the host is blocked (sandboxed network), ask the user to open `https://en.wikipedia.org/wiki/Special:Random` and paste back the URL it lands on, then use that article as the seed. Otherwise (network down, rate-limited), say why and hard fail.
 
 ### 2. Find an oblique connection
 
