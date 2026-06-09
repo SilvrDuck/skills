@@ -24,6 +24,7 @@ Personal repo, issues for bugs or out-of-date info are welcome, see [CONTRIBUTIN
 | [align-check](skills/align-check/SKILL.md) | Lightweight tool to help the llm align its ascii schemas. Autoinvoked mostly. |
 | [skill-creator](skills/skill-creator/SKILL.md) | Just my own tuning on your typical skill creator skill. |
 | [mvk](skills/mvk/SKILL.md) | Learn the basics about anything, the Minimal Viable Knowledge to talk with nerds and purchase the correct thing. |
+| [tuto](skills/tuto/SKILL.md) | Get the llm to give you short and mindless instructions. |
 
 ## Install
 
