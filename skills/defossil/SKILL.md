@@ -27,7 +27,7 @@ That single question replaces a hundred heuristics. Apply it line by line.
 
 ## Taxonomy of fossils
 
-Each row is a pattern to scan for, with the diagnostic that distinguishes fossil from legitimate content.
+Each row is a common fossil shape, with the diagnostic that distinguishes fossil from legitimate content. The taxonomy is a recognition aid, not a filter — lines that match no row still get the litmus test.
 
 | Pattern | Fossil tell | Example |
 |---|---|---|
@@ -35,6 +35,7 @@ Each row is a pattern to scan for, with the diagnostic that distinguishes fossil
 | **Scaffolding announcement in docs** | README/docstring paragraph about *internal plumbing* (validators, checks, hooks) that the user only cares about as a black box | "The validator enforces that every X has a Y…" when the reader just wants to use X |
 | **Defensive reassurance** | Note answering a *worry the user voiced*, not informing a fresh reader | "**Note:** this script is safe — it dry-runs by default…" added after "are you sure?" |
 | **Before-state preservation** | "instead of <thing that no longer exists>" / "previously was sync" / "v2: now thread-safe" | `# Using a set instead of a list for O(1) lookups` when no list is in the diff |
+| **Argument residue / contrastive negation** | Negates or argues against a position that only exists because it was raised and rejected in the chat — "not X but Y", "rather than Z", rhetorical takedowns of the old approach. No temporal or chat markers; the content itself is conversation-shaped | "governed by identity, not by network placement" when the network approach was a chat-side debate; "this conflates two questions…" arguing with a superseded decision |
 | **Changelog-in-code** | `Changes:` / `What's new:` / `Updated:` blocks inside docstrings or code comments | A docstring listing recent edits rather than current behavior |
 | **Chat-pointer TODOs** | TODOs that reference "we", "as discussed", "per the chat", "from earlier" | `# TODO: as we discussed, add retry logic later` |
 | **Echoed wording as label** | Section heading or comment that quotes the user's own phrasing back | User called it "the tightening step"; code grows `# Tightening step:` |
@@ -42,6 +43,8 @@ Each row is a pattern to scan for, with the diagnostic that distinguishes fossil
 | **Out-of-scope disclaimers** | Docs section saying what the artifact *doesn't* do because the user said it wasn't needed | "Note: this does not handle Unicode — that's out of scope for now" |
 | **Session narration** | README section narrating what *the LLM did this session* | `## What I Added`, `## Changes in this version` (in a new artifact with no prior version) |
 | **Acknowledgment trails** | "as requested", "per your feedback", "updated to", "now does X" framing | `# Updated to use async per your feedback` |
+
+Repair for argument residue: state what is true positively and delete the ghost being argued with. Keep the negation only if a fresh reader would genuinely need the contrast to avoid a wrong assumption.
 
 ---
 
@@ -74,8 +77,7 @@ Announce the scope you picked in one line before scanning. If the user passed a 
 
 Walk every added/modified line. For each:
 
-- Match against the taxonomy.
-- Apply the litmus test.
+- Apply the litmus test — to **every** line, whether or not it matches a taxonomy pattern. The taxonomy helps recognize common shapes; matching it is not a precondition for testing a line.
 - Classify: **fossil**, **borderline**, or **keep**.
 
 Scan **all artifact types** in the diff, not just code: Markdown (README, docs), commit messages, PR descriptions, test names, identifier names, code comments, docstrings.
