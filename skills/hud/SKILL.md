@@ -9,6 +9,8 @@ disable-model-invocation: true
 
 Build a live, two-way visual workspace for the current conversation: the user steers through a local web page, the agent steers through files. The plumbing is fixed and shipped with this skill — **never rewrite it**. The agent's job is only to design `ui.html` and `state.json` for this discussion.
 
+**A HUD is a throwaway tool, not a fixture.** It's spun up to serve one slice of the conversation and is meant to be torn down — server, watcher, hook, *and* the workspace directory deleted — the moment it's no longer useful. Do not let a HUD linger across the rest of a long conversation once its purpose is served. When in doubt whether it's still needed, ask rather than leave it running. See **Teardown** below; treat it as the default ending, not an afterthought.
+
 ## How the pieces talk
 
 | File (in workspace dir) | Owner | Purpose |
@@ -26,7 +28,7 @@ Build a live, two-way visual workspace for the current conversation: the user st
 3. **Start the server in the background**: `python3 <this-skill-dir>/assets/server.py --dir <workspace>`. It picks a free port and writes `<workspace>/server.json`; read it and give the user the URL (`http://localhost:<port>`).
 4. **Start the watcher in the background**: `python3 <this-skill-dir>/scripts/watch-events.py <workspace>`. User actions accumulate silently in `events.jsonl`; the watcher blocks until the user clicks the shell's **Nudge agent** header button, then prints everything logged since the last sync and exits — that's the ping to react. (`--on any` wakes on every event instead — only for short waits on a single pick, it costs a turn per interaction.) Tell the user: "interact freely — hit *Nudge agent* when you want me to react, or just say anything in chat."
 5. **React loop.** When the watcher returns events: read them, respond in chat and/or mutate `ui.html` / `state.json` (the page updates live), then **restart the watcher**. Keep exactly one watcher running. Keep the server running for the whole session.
-6. **Teardown.** When the user is done with the HUD: stop the watcher and server, and run `python3 <this-skill-dir>/scripts/hook.py remove` — nothing is left behind except the workspace in /tmp.
+6. **Teardown — promptly, without being asked.** The moment the HUD has served its purpose (the user says they're done, the task it was built for is finished, or the conversation has clearly moved on), tear it all down: stop the watcher and server, run `python3 <this-skill-dir>/scripts/hook.py remove`, and delete the workspace (`rm -rf <workspace>`). Leave nothing running and nothing on disk. If you're unsure whether it's still wanted, ask — don't let it sit idle through the rest of the conversation.
 
 ## Writing ui.html fragments
 
@@ -61,7 +63,7 @@ One fragment sketch:
 - Prefer `state.json` edits for data-only changes; edit `ui.html` only for structural changes.
 - Never write to `events.jsonl` or `.events.cursor` — read only.
 - Narrate meaningful reactions in chat ("saw you rejected #3 — removed it"), so the conversation and the HUD stay one discussion.
-- On `TIMEOUT` from the watcher, ask the user whether to keep the HUD open; restart the watcher if yes.
+- On `TIMEOUT` from the watcher, ask the user whether to keep the HUD open; restart the watcher if yes, otherwise tear it down now (step 6) rather than leaving it idle.
 - If the sandbox blocks binding a port, rerun the server command with sandbox disabled or ask the user to allow it.
 
 ## Prompt hook (Claude Code only)
