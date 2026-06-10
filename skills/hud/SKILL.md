@@ -24,8 +24,9 @@ Build a live, two-way visual workspace for the current conversation: the user st
 1. **Frame the problem.** From the conversation, decide what visual surface would actually help. Then propose 2–4 concrete modalities via the harness's multiple-choice question tool (with small preview mockups if supported). Examples: triage/checklist board, parameter panel (sliders/toggles), ranking or voting on options, editable table, A/B compare with pick buttons, annotatable document, status dashboard.
 2. **Set up the workspace** at `/tmp/claude/hud/<slug>` (fall back to a dir inside the project if not writable). Write an initial `ui.html` and `state.json`.
 3. **Start the server in the background**: `python3 <this-skill-dir>/assets/server.py --dir <workspace>`. It picks a free port and writes `<workspace>/server.json`; read it and give the user the URL (`http://localhost:<port>`).
-4. **Start the watcher in the background**: `python3 <this-skill-dir>/scripts/watch-events.py <workspace>`. It blocks until the user does something, prints the new event lines, and exits — that's the ping to react.
+4. **Start the watcher in the background**: `python3 <this-skill-dir>/scripts/watch-events.py <workspace>`. User actions accumulate silently in `events.jsonl`; the watcher blocks until the user clicks the shell's **Nudge agent** header button, then prints everything logged since the last sync and exits — that's the ping to react. (`--on any` wakes on every event instead — only for short waits on a single pick, it costs a turn per interaction.) Tell the user: "interact freely — hit *Nudge agent* when you want me to react, or just say anything in chat."
 5. **React loop.** When the watcher returns events: read them, respond in chat and/or mutate `ui.html` / `state.json` (the page updates live), then **restart the watcher**. Keep exactly one watcher running. Keep the server running for the whole session.
+6. **Teardown.** When the user is done with the HUD: stop the watcher and server, and run `python3 <this-skill-dir>/scripts/hook.py remove` — nothing is left behind except the workspace in /tmp.
 
 ## Writing ui.html fragments
 
@@ -56,8 +57,13 @@ One fragment sketch:
 
 ## Rules
 
+- While a HUD is live, on every user chat message run `python3 <this-skill-dir>/scripts/pending-events.py` before responding — their unsynced HUD actions are context for what they just said. (Harnesses with prompt hooks can automate this; see below.)
 - Prefer `state.json` edits for data-only changes; edit `ui.html` only for structural changes.
 - Never write to `events.jsonl` or `.events.cursor` — read only.
 - Narrate meaningful reactions in chat ("saw you rejected #3 — removed it"), so the conversation and the HUD stay one discussion.
 - On `TIMEOUT` from the watcher, ask the user whether to keep the HUD open; restart the watcher if yes.
 - If the sandbox blocks binding a port, rerun the server command with sandbox disabled or ask the user to allow it.
+
+## Prompt hook (Claude Code only)
+
+If the harness supports prompt hooks, run `python3 <this-skill-dir>/scripts/hook.py install` during setup: it adds a UserPromptSubmit hook running `pending-events.py` to the **project's** `.claude/settings.local.json` (git-excluded via `.git/info/exclude` — no repo diff, no machine-level config), so pending HUD events ride along whenever the user types in chat. Hooks load at session start: until the user opens `/hooks` or starts a new session, the chat-message rule above is the safety net. Always `hook.py remove` at teardown; a forgotten entry is an inert no-op anyway. Other harnesses skip this entirely.

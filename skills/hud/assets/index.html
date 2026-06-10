@@ -19,8 +19,9 @@
            position: sticky; top: 0; z-index: 10; }
   header strong { font-size: 13px; letter-spacing: 3px; color: var(--dim); }
   #hud-title { font-size: 13px; color: var(--text); }
+  #hud-nudge { margin-left: auto; font-size: 12.5px; padding: 4px 12px; min-width: 110px; }
   #hud-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--bad);
-             margin-left: auto; align-self: center; transition: background .3s; }
+             align-self: center; transition: background .3s; }
   #hud-dot.on { background: var(--ok); }
   #hud-mount { padding: 22px 18px; max-width: 1100px; margin: 0 auto; }
   h1, h2, h3 { line-height: 1.25; } h2 { font-size: 19px; } h3 { font-size: 16px; }
@@ -40,7 +41,7 @@
 </style>
 </head>
 <body>
-<header><strong>HUD</strong><span id="hud-title" class="dim"></span><span id="hud-dot"></span></header>
+<header><strong>HUD</strong><span id="hud-title" class="dim"></span><button id="hud-nudge" title="Deliver everything you did here to the agent now">Nudge agent</button><span id="hud-dot"></span></header>
 <main id="hud-mount"><p class="dim">Waiting for the agent to draw the first UI…</p></main>
 <script>
 (() => {
@@ -130,6 +131,13 @@
     if (!el) return;
     const { action, ...rest } = el.dataset;
     hud.send(action, { ...rest, label: (el.textContent || '').trim().slice(0, 120) });
+  });
+
+  const nudge = document.getElementById('hud-nudge');
+  nudge.addEventListener('click', async () => {
+    await hud.send('nudge');
+    nudge.textContent = '✓ nudged';
+    setTimeout(() => { nudge.textContent = 'Nudge agent'; }, 1200);
   });
 
   const debounces = new Map();
