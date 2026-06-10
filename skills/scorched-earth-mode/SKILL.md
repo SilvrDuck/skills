@@ -1,6 +1,6 @@
 ---
 name: scorched-earth-mode
-description: Manual-only opt-in stance for projects still iterating. When active, flips the agent's default toward hard-replace at every scale — architecture, conceptual model, schema, API surface, scope of change, and small-pattern shims — instead of preserving what's already there. Use when the user invokes `/scorched-earth-mode`, asks to enable / rip-and-replace / raze the old code, or when the project's instruction file declares the mode is on. Do NOT auto-invoke on generic planning, scoping, or refactor brainstorms.
+description: Manual-only opt-in stance for projects still iterating. When active, flips the agent's default toward hard-replace at every scale — architecture, conceptual model, schema, API surface, scope of change, and small-pattern shims — instead of preserving what's already there. Use when the user invokes `/scorched-earth-mode`, asks to enable / rip-and-replace / raze the old code, or when the session context carries the scorched-earth declaration. Do NOT auto-invoke on generic planning, scoping, or refactor brainstorms.
 disable-model-invocation: true
 argument-hint: "[on | off — defaults to on]"
 ---
@@ -15,11 +15,13 @@ The name is the point: when this mode is on, the project's prior structure is tr
 
 ---
 
-## Activation: opt-in, persisted through the best available channel
+## Activation: opt-in, persisted locally
 
-The mode is opt-in. The skill is gated by `disable-model-invocation: true`, so the agent never auto-fires it from a description match. Scorched-earth is active for a project whenever its declaration is present in the session context at startup — turning it on means persisting that declaration so every future session inherits it.
+The mode is opt-in. The skill is gated by `disable-model-invocation: true`, so the agent never auto-fires it from a description match. Scorched-earth is active whenever its declaration is present in the session context at startup — turning it on means persisting that declaration so every future session inherits it.
 
-**The payload is the same through every channel** — this canonical declaration:
+The state is **per-developer and local**: it lives in the developer's own local settings, never in git-tracked files. Enabling the mode must not dirty the working tree, append to shared instruction files, or install hooks into teammates' sessions. A teammate who wants the mode runs `/scorched-earth-mode` themselves.
+
+**The payload is this canonical declaration:**
 
 ```markdown
 ## Scorched-earth mode: ON
@@ -28,28 +30,28 @@ Scorched-earth mode activated — you must always read the `scorched-earth-mode`
 
 ### Inheriting it (already on)
 
-A later session sees the declaration with no invocation needed — a SessionStart hook injects it, or the agent reads it from the instruction file at startup — and applies the stance to every code-modification turn for the rest of the session. Invoking `/scorched-earth-mode` while it's already on is a no-op confirmation: announce it's active, cite where the state lives, exit.
+A later session sees the declaration with no invocation needed — the session-start hook injects it — and applies the stance to every code-modification turn for the rest of the session. Invoking `/scorched-earth-mode` while it's already on is a no-op confirmation: announce it's active, cite where the state lives, exit.
 
 ### Turning it on (`/scorched-earth-mode`, "rip and replace", "raze the old code")
 
 Persist the declaration through the most reliable channel the harness offers — **check capability, then pick one**:
 
-- **Harness with session-start hooks (e.g. Claude Code).** Write the declaration to a marker file (`.claude/scorched-earth.md`) and add — idempotently — a `SessionStart` hook that injects the marker's contents whenever it exists. The harness then *guarantees* the stance reaches every future session, so it never depends on the agent choosing to read a file, and `CLAUDE.md` stays clean. Exact config and idempotency rules: [references/hook-setup.md](references/hook-setup.md).
-- **Any other harness (no hooks).** Append the declaration block to the project's instruction file — `CLAUDE.md` at the project root (or `AGENTS.md` / equivalent) unless the user says otherwise. Create the file with this block as its first content if none exists.
+- **Harness with session-start hooks and per-developer local settings (e.g. Claude Code).** Add — idempotently — a `SessionStart` hook to the project's `.claude/settings.local.json` that prints the declaration inline. The harness *guarantees* the stance reaches every future session, and the file is personal and git-ignored, so nothing leaks into shared channels. Exact config and idempotency rules: [references/hook-setup.md](references/hook-setup.md).
+- **Any other harness (no hooks).** Apply the stance for the current session and tell the user it won't persist — they re-invoke `/scorched-earth-mode` in each session where they want it. Do not write the declaration into `CLAUDE.md`, `AGENTS.md`, or any other shared file.
 
-Either way, **announce the change — never silent.** Auto-write is the default; opt-in is consent, but the user must see what changed:
+Either way, **announce the change — never silent.** Installing the hook without asking is the default; opt-in is consent, but the user must see what changed:
 
-> Scorched-earth mode is on. Installed a SessionStart hook that injects the stance each session (marker: `.claude/scorched-earth.md`). Run `/scorched-earth-mode off` to remove it.
+> Scorched-earth mode is on. Installed a SessionStart hook in `.claude/settings.local.json` (local to you, not git-tracked) that injects the stance each session. Run `/scorched-earth-mode off` to remove it.
 
-> Scorched-earth mode is on. Appended the declaration to `CLAUDE.md` so future sessions inherit it. Run `/scorched-earth-mode off` to remove it.
+> Scorched-earth mode is on for this session only — this harness has no session-start hooks, so the mode can't persist. Re-run `/scorched-earth-mode` in any session where you want it.
 
 ### Turning it off (`/scorched-earth-mode off`)
 
-Reverse whichever channel is in use: delete the `.claude/scorched-earth.md` marker (the hook goes inert — leave the hook itself in place), or remove the declaration block from the instruction file. Announce what changed. If neither is present, say so and exit without writing.
+Remove the scorched-earth hook entry from `.claude/settings.local.json`, leaving every other hook untouched. Announce what changed. If no hook is present, say so and exit without writing.
 
 ### Silence = off
 
-No marker, no declaration in the instruction file, and no invocation this session → the mode is **off**. The agent does not lean toward hard-replace, does not ask whether the project is in scorched-earth mode, and does not infer the mode from heuristics (release tags, file counts, commit history). Silence is a clear signal, not an invitation to guess.
+No injected declaration and no invocation this session → the mode is **off**. The agent does not lean toward hard-replace, does not ask whether the project is in scorched-earth mode, and does not infer the mode from heuristics (release tags, file counts, commit history). Silence is a clear signal, not an invitation to guess.
 
 ---
 
@@ -198,8 +200,9 @@ One line is fine when there's nothing to report. Don't pad.
 
 ## Anti-patterns
 
-- ❌ Inferring the mode from git tags, release count, file count, or other heuristics. The mode is opt-in — declared in the instruction file or activated explicitly by the user. Heuristics aren't a substitute for either.
-- ❌ Silently writing to the instruction file or installing the hook. Auto-write on opt-in is the design, but the announcement is non-negotiable — the user must see which channel was used and what was added (which file / which `settings.json` hook).
+- ❌ Inferring the mode from git tags, release count, file count, or other heuristics. The mode is opt-in — injected by the session-start hook or activated explicitly by the user. Heuristics aren't a substitute for either.
+- ❌ Silently installing the hook. Auto-write on opt-in is the design, but the announcement is non-negotiable — the user must see what was added and where (`.claude/settings.local.json`), or that the mode is session-only on this harness.
+- ❌ Persisting the mode in shared, git-tracked files — `CLAUDE.md`, `AGENTS.md`, `.claude/settings.json`. The stance is per-developer; enabling it must never dirty the working tree or install hooks into teammates' sessions.
 - ❌ Adding a compat shim "just in case." Either name the caller or delete the path. There is no just-in-case here.
 - ❌ Adding a new file inside the existing module layout when the layout itself is the thing to change. The bias to preserve structure runs strongest at the largest scale — that's exactly where to push back.
 - ❌ Introducing the new abstraction *alongside* the old one and "leaving migration for later." Scorched-earth does the migration in the same diff. Parallel old/new is the bug at concept scale, just as a re-export shim is the bug at name scale.
@@ -207,4 +210,4 @@ One line is fine when there's nothing to report. Don't pad.
 - ❌ Conflating "merged to main" with "shipped." Branches merge constantly during iteration; merging doesn't create external dependents.
 - ❌ Keeping a "deprecation period." Scorched-earth has no deprecation period — the rename and the call-site update land in the same commit. The restructure and the import-path updates land together too.
 - ❌ Leaving "removed for now" or "kept for reference" comments. The destination diff has no past tense.
-- ❌ Treating silence in the instruction file as ambiguity to resolve. Silence is a clear signal: the mode is off.
+- ❌ Treating the absence of the declaration as ambiguity to resolve. Silence is a clear signal: the mode is off.
