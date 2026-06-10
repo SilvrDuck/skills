@@ -2,6 +2,8 @@
 
 A personal [Agent Skills](https://agentskills.io) collection. Feel free to use it :)
 
+The way I like to use skills is to still other people's ideas, but not their skill verbatim. I feel like this way they are a true reflection of my workflows.
+
 > **Skills live in `skills/`.** Every other dir in this repo is a symlink pointing there, for compatibility with various tools.
 
 Personal repo, issues for bugs or out-of-date info are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md).
