@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>HUD</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d;
+    --text: #e6edf3; --dim: #8b949e; --accent: #58a6ff;
+    --ok: #3fb950; --warn: #d29922; --bad: #f85149;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; align-items: baseline; gap: 12px; padding: 9px 16px;
+           border-bottom: 1px solid var(--border); background: var(--panel);
+           position: sticky; top: 0; z-index: 10; }
+  header strong { font-size: 13px; letter-spacing: 3px; color: var(--dim); }
+  #hud-title { font-size: 13px; color: var(--text); }
+  #hud-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--bad);
+             margin-left: auto; align-self: center; transition: background .3s; }
+  #hud-dot.on { background: var(--ok); }
+  #hud-mount { padding: 22px 18px; max-width: 1100px; margin: 0 auto; }
+  h1, h2, h3 { line-height: 1.25; } h2 { font-size: 19px; } h3 { font-size: 16px; }
+  button { background: var(--panel); color: var(--text); border: 1px solid var(--border);
+           border-radius: 6px; padding: 6px 14px; cursor: pointer; font: inherit; }
+  button:hover { border-color: var(--accent); }
+  input, select, textarea { background: var(--bg); color: var(--text);
+           border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font: inherit; }
+  input:focus, select:focus, textarea:focus, button:focus-visible
+         { outline: 1px solid var(--accent); border-color: var(--accent); }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+  th { background: var(--panel); }
+  .card { background: var(--panel); border: 1px solid var(--border);
+          border-radius: 8px; padding: 14px 16px; margin: 10px 0; }
+  .dim { color: var(--dim); }
+</style>
+</head>
+<body>
+<header><strong>HUD</strong><span id="hud-title" class="dim"></span><span id="hud-dot"></span></header>
+<main id="hud-mount"><p class="dim">Waiting for the agent to draw the first UI…</p></main>
+<script>
+(() => {
+  const mount = document.getElementById('hud-mount');
+  const dot = document.getElementById('hud-dot');
+  let vUI = null, vState = null;
+
+  window.hud = {
+    state: {},
+    send(type, data = {}) {
+      return fetch('/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, ...data }),
+      }).catch(() => {});
+    },
+  };
+
+  // Form values and focus survive UI hot-swaps, keyed by element [name].
+  function snapshot() {
+    const snap = { values: {}, focus: null };
+    for (const el of mount.querySelectorAll('[name]')) {
+      if (el.type === 'radio') { if (el.checked) snap.values[el.name] = el.value; }
+      else if (el.type === 'checkbox') snap.values[el.name] = el.checked;
+      else snap.values[el.name] = el.value;
+    }
+    const a = document.activeElement;
+    if (a && a.name) snap.focus = { name: a.name, start: a.selectionStart, end: a.selectionEnd };
+    return snap;
+  }
+
+  function restore(snap) {
+    for (const el of mount.querySelectorAll('[name]')) {
+      if (el.dataset.noRestore !== undefined || !(el.name in snap.values)) continue;
+      const v = snap.values[el.name];
+      if (el.type === 'radio') el.checked = el.value === v;
+      else if (el.type === 'checkbox') el.checked = v;
+      else el.value = v;
+    }
+    if (snap.focus) {
+      const el = mount.querySelector(`[name="${CSS.escape(snap.focus.name)}"]`);
+      if (el) {
+        el.focus();
+        try { el.setSelectionRange(snap.focus.start, snap.focus.end); } catch {}
+      }
+    }
+  }
+
+  function swapUI(html) {
+    const snap = snapshot();
+    mount.innerHTML = html;
+    // innerHTML does not execute <script> tags — recreate them so they run.
+    for (const old of mount.querySelectorAll('script')) {
+      const s = document.createElement('script');
+      for (const attr of old.attributes) s.setAttribute(attr.name, attr.value);
+      s.textContent = old.textContent;
+      old.replaceWith(s);
+    }
+    restore(snap);
+    window.dispatchEvent(new CustomEvent('hud:ui'));
+    window.dispatchEvent(new CustomEvent('hud:state', { detail: hud.state }));
+  }
+
+  async function tick() {
+    try {
+      const v = await (await fetch('/version')).json();
+      const stateChanged = v.state !== vState, uiChanged = v.ui !== vUI;
+      if (stateChanged) {
+        hud.state = await (await fetch('/state')).json();
+        vState = v.state;
+        const t = hud.state.title || '';
+        document.getElementById('hud-title').textContent = t;
+        document.title = t ? `HUD — ${t}` : 'HUD';
+      }
+      if (uiChanged) { swapUI(await (await fetch('/ui')).text()); vUI = v.ui; }
+      else if (stateChanged) window.dispatchEvent(new CustomEvent('hud:state', { detail: hud.state }));
+      dot.classList.add('on');
+    } catch { dot.classList.remove('on'); }
+  }
+  setInterval(tick, 250);
+  tick();
+
+  // Every user action lands in events.jsonl without per-widget wiring:
+  // clicks on [data-action] elements, and edits to any [name] field (debounced).
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const { action, ...rest } = el.dataset;
+    hud.send(action, { ...rest, label: (el.textContent || '').trim().slice(0, 120) });
+  });
+
+  const debounces = new Map();
+  document.addEventListener('input', (e) => {
+    const el = e.target;
+    if (!el.name) return;
+    clearTimeout(debounces.get(el.name));
+    debounces.set(el.name, setTimeout(() => {
+      const value = el.type === 'checkbox' ? el.checked : el.value;
+      hud.send('input', { name: el.name, value });
+    }, 300));
+  });
+})();
+</script>
+</body>
+</html>

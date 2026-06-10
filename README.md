@@ -18,13 +18,14 @@ Personal repo, issues for bugs or out-of-date info are welcome, see [CONTRIBUTIN
 | [handout](skills/handout/SKILL.md) | Dump the current conversation as a self-contained Markdown brief so a fresh LLM can pick up the work. Includes project context. |
 | [handcraft](skills/handcraft/SKILL.md) | For when I am tired of vibe coding. Work function by function with the agent. |
 | [walkthrough](skills/walkthrough/SKILL.md) | Debugger style walkthrough of a code base. Guided tour along the happy path. |
-| [conventional-git](skills/conventional-git/SKILL.md) | Conventional Commits + Conventional Branches cheat sheet. |
+| [conventional-git](skills/conventional-git/SKILL.md) | Conventional Commits & Conventional Branches cheat sheet. |
 | [yolo](skills/yolo/SKILL.md) | Used to run a quick and dirty experiment to check feasability. It writes a local YOLO-LEARNIGS.md to use in your future speccing. |
 | [ascii-diagram-renderer](skills/ascii-diagram-renderer/SKILL.md) | Avoids typical LLM ASCII diagram mistakes by using [Graph Easy](https://github.com/ironcamel/Graph-Easy) |
 | [align-check](skills/align-check/SKILL.md) | Lightweight tool to help the llm align its ascii schemas. Autoinvoked mostly. |
 | [skill-creator](skills/skill-creator/SKILL.md) | Just my own tuning on your typical skill creator skill. |
 | [mvk](skills/mvk/SKILL.md) | Learn the basics about anything, the Minimal Viable Knowledge to talk with nerds and purchase the correct thing. |
 | [tuto](skills/tuto/SKILL.md) | Get the llm to give you short and mindless instructions. |
+| [hud](skills/hud/SKILL.md) | Sets up a live hud with live interaction with the agent. Basically builds a UI on your conversation. |
 
 ## Install
 
