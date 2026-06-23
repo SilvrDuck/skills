@@ -72,7 +72,7 @@ CC-only. Don't break portability — other tools ignore unknown fields. Treat as
 ### `argument-hint` — optional
 
 - **Type**: string
-- **Behavior**: Shown in CC's autocomplete picker when the user types `/<name> `. Use `[brackets]` for optional args, `<angles>` for required.
+- **Behavior**: Shown in CC's autocomplete picker when the user types `/<name> `. Wrap each argument in square brackets `[ ]`. Separate multiple arguments with spaces (`[filename] [format]`), show mutually-exclusive choices with `|` inside one bracket (`[on | off]`), and append `— optional` to any argument the user can omit (single-argument skills invocable on a bare `/name` always carry it; in a multi-argument hint the leading primary argument may stay bare for readability). Do not use angle brackets `< >` — the Claude Code docs use square brackets for every argument (examples: `[issue-number]`, `[filename] [format]`).
 - **Portability**: Other tools ignore it. Safe to use.
 
 Example: `argument-hint: "[focus question — optional]"`

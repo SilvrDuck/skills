@@ -1,7 +1,7 @@
 ---
 name: tuto
 description: Zero-brain "just tell me what to do" mode for when the user is too lazy to read, understand, or debug anything and just wants to be handed direct, do-it-for-me instructions. Use when the user types /tuto, or says things like "just tell me what to do", "I don't want to understand any of this", "give me the ez steps", "do it for me", or "walk me through it but don't make me think".
-argument-hint: "[what you want to do]"
+argument-hint: "[what you want to do — optional]"
 disable-model-invocation: true
 ---
 

@@ -42,7 +42,7 @@ description: <what + when + natural triggers, 10–1024 chars>
 
 Optional fields (skip unless you have a reason): `license`, `compatibility`, `metadata`, `allowed-tools`. Behavior-changing CC-only fields (`when_to_use`, `arguments`, …) make the skill non-portable — avoid unless CC-only.
 
-Exception worth using proactively: **`argument-hint`** — shows in Claude Code's autocomplete picker. Add whenever the skill takes a positional argument. `[brackets]` = optional, `<angles>` = required. Example: `argument-hint: "[focus question — optional]"`. Other tools ignore it, so it's portability-safe.
+Exception worth using proactively: **`argument-hint`** — shows in Claude Code's autocomplete picker. Add whenever the skill takes an argument. Wrap each argument in square brackets; space-separate multiple (`[from] [to]`); show mutually-exclusive choices with `|` inside one bracket (`[on | off]`); append `— optional` to any argument the user can omit. Never angle brackets — the CC docs use square brackets for every argument. Example: `argument-hint: "[focus question — optional]"`. Other tools ignore it, so it's portability-safe.
 
 Exception worth knowing: **`disable-model-invocation: true`** — the hard toggle that turns off auto-invocation. Claude can no longer trigger the skill from the description; only the user can invoke it via `/<name>`. The description isn't even loaded into context unless someone invokes it. Use for opt-in stance changes, high-stakes workflows, or anything that should sit behind an explicit gate so it doesn't fire on every loosely-related mention. Claude Code only — other tools ignore the field and fall back to normal auto-invocation, so the skill still works everywhere; only CC honors the gate. Source: [Claude Code skills docs](https://code.claude.com/docs/en/skills) ("Frontmatter reference" / "Control who invokes a skill").
 
@@ -162,7 +162,7 @@ If a skill genuinely needs CC-only features to function, say so in the descripti
 - [ ] For new skills: asked the user what command/name they want before scaffolding.
 - [ ] Directory name matches frontmatter `name` exactly.
 - [ ] Description: states what AND when, includes natural trigger keywords, no workflow summary, pushy where useful.
-- [ ] If the skill takes a positional argument, `argument-hint` is set (bracket form for optional, angle form for required).
+- [ ] If the skill takes an argument, `argument-hint` is set: square brackets per arg, space-separated for multiple, `|` for choices, `— optional` on omittable args — never angle brackets.
 - [ ] Body ≤500 lines, ≤5,000 tokens activated.
 - [ ] Heavy reference content split to `references/` (and explicitly linked from SKILL.md).
 - [ ] Deterministic operations split to `scripts/`.
