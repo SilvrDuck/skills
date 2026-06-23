@@ -1,5 +1,6 @@
 ---
 name: be-creative
+argument-hint: "[request] [Manual Wikipedia seed link (if harness blocks fetch) — optional]"
 description: Inject genuine, surprising originality into a response by anchoring it to an unrelated random Wikipedia article. Use this skill whenever the user asks the agent to be creative, original, surprising, weird, fun, playful, imaginative, "out of the box", "tiré par les cheveux", or asks for ideas/names/designs/stories/explanations/metaphors that need fresh angles. Also trigger when the user explicitly says "be creative", "/be-creative", or "creative skill", or whenever the request is open-ended enough that a stock answer would feel generic and a novel angle would clearly serve them better. Prefer triggering over not triggering when creativity is even loosely implied.
 ---
 
@@ -13,7 +14,9 @@ The user should not see the scaffolding. They simply get an unusually inspired a
 
 ### 1. Fetch a random article, filtered at the command level
 
-Run **exactly this command**. It is built so that **only three short lines** (title, URL, ~700-char extract) ever reach your context. This matters: the Wikipedia REST/action APIs return ~2-10 KB of metadata you don't need, and pulling that into context is wasteful and noisy. The pipe collapses everything to the minimum useful signal.
+**First, check the user's request for a Wikipedia article URL.** If they already pasted one (e.g. `https://en.wikipedia.org/wiki/...`), assume they fetched a random page for you because their harness can't reach Wikipedia. Skip the curl entirely, treat their link as the seed, and go straight to step 2. A user-supplied article is just as valid a seed as the curl — the only forbidden source is one *you* pick yourself.
+
+Otherwise, run **exactly this command**. It is built so that **only three short lines** (title, URL, ~700-char extract) ever reach your context. This matters: the Wikipedia REST/action APIs return ~2-10 KB of metadata you don't need, and pulling that into context is wasteful and noisy. The pipe collapses everything to the minimum useful signal.
 
 ```bash
 curl -sL --max-time 6 "https://en.wikipedia.org/w/api.php?action=query&generator=random&grnnamespace=0&grnlimit=1&prop=extracts|info&exintro&explaintext&exchars=700&inprop=url&format=json" \
@@ -26,7 +29,7 @@ What the flags do, briefly, so you understand what to keep vs. tweak:
 - `prop=info&inprop=url`: include the canonical URL.
 - The `python3 -c` step extracts just `title`, `fullurl`, `extract` and prints them as three lines. Nothing else (no IDs, no revision metadata, no `pageprops`, no `continue` tokens) enters your context.
 
-If the command fails, do **not** retry in a loop or fall back to a hard-coded list. The seed must come from this curl or from the user — **never** from your own web-search, web-fetch, or hand-picked article/number. The instant *you* choose the seed you reintroduce the exact bias this skill exists to remove, so a self-picked seed is worse than not running the skill at all; "too cumbersome for a quick question" is not an exception. So if the host is blocked (sandboxed network), stop and ask the user to open `https://en.wikipedia.org/wiki/Special:Random` and paste back the URL it lands on, then use that article as the seed. Otherwise (network down, rate-limited), say why and hard fail.
+If the command fails, do **not** retry in a loop or fall back to a hard-coded list. The seed must come from this curl or from the user — **never** from your own web-search, web-fetch, or hand-picked article/number. The instant *you* choose the seed you reintroduce the exact bias this skill exists to remove, so a self-picked seed is worse than not running the skill at all; "too cumbersome for a quick question" is not an exception. So if the host is blocked (sandboxed network), stop and ask the user to open `https://en.wikipedia.org/wiki/Special:Random` and paste back the URL it lands on, then use that article as the seed — and let them know they can skip this round-trip next time by pasting a `Special:Random` link directly in their request. Otherwise (network down, rate-limited), say why and hard fail.
 
 ### 2. Find an oblique connection
 
