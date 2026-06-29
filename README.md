@@ -28,6 +28,7 @@ Personal repo, issues for bugs or out-of-date info are welcome, see [CONTRIBUTIN
 | [mvk](skills/mvk/SKILL.md) | Learn the basics about anything, the Minimal Viable Knowledge to talk with nerds and purchase the correct thing. |
 | [tuto](skills/tuto/SKILL.md) | Get the llm to give you short and mindless instructions. |
 | [hud](skills/hud/SKILL.md) | Sets up a live hud with live interaction with the agent. Basically builds a UI on your conversation. |
+| [rp](skills/rp/SKILL.md) | Make your agent role play to do some cheap user testing. |
 
 ## Install
 
