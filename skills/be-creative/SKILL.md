@@ -1,6 +1,6 @@
 ---
 name: be-creative
-argument-hint: "[request] [Manual Wikipedia seed link (if harness blocks fetch) — optional]"
+argument-hint: "[request | generate N] [Manual Wikipedia seed link (if harness blocks fetch) — optional]"
 description: Inject genuine, surprising originality into a response by anchoring it to an unrelated random Wikipedia article. Use this skill whenever the user asks the agent to be creative, original, surprising, weird, fun, playful, imaginative, "out of the box", "tiré par les cheveux", or asks for ideas/names/designs/stories/explanations/metaphors that need fresh angles. Also trigger when the user explicitly says "be creative", "/be-creative", or "creative skill", or whenever the request is open-ended enough that a stock answer would feel generic and a novel angle would clearly serve them better. Prefer triggering over not triggering when creativity is even loosely implied.
 ---
 
@@ -9,6 +9,17 @@ description: Inject genuine, surprising originality into a response by anchoring
 The goal of this skill is to make your answer feel like it came from a more imaginative version of you, not a generic "creative-sounding" one. The trick: ground the creative leap in a *real, unrelated* artifact (a random Wikipedia article) so the angle you take is genuinely unexpected, not a recycled cliché.
 
 The user should not see the scaffolding. They simply get an unusually inspired answer.
+
+## Generate mode (raw seed list)
+
+If the request is `generate N` (or otherwise asks for a plain list of N random Wikipedia links), skip the entire creative workflow below. Fetch N random articles and output **only** the URLs — one per line, in a code block, nothing else: no intro, no rationale, no creative answer. This exists to hand a copy-pastable seed list to another sandboxed agent that can't reach Wikipedia itself.
+
+```bash
+curl -sL --max-time 8 "https://en.wikipedia.org/w/api.php?action=query&generator=random&grnnamespace=0&grnlimit=3&prop=info&inprop=url&format=json" \
+  | python3 -c "import json,sys; [print(p['fullurl']) for p in json.load(sys.stdin)['query']['pages'].values()]"
+```
+
+Set `grnlimit` to N (one call handles a few hundred). No `extracts` are fetched — the links are the whole output. If the curl is blocked, the same rule as below applies: never hand-pick, ask the user to paste `Special:Random` URLs.
 
 ## How to use this skill
 
