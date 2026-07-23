@@ -30,6 +30,7 @@ Personal repo, issues for bugs or out-of-date info are welcome, see [CONTRIBUTIN
 | [hud](skills/hud/SKILL.md) | Sets up a live hud with live interaction with the agent. Basically builds a UI on your conversation. |
 | [rp](skills/rp/SKILL.md) | Make your agent role play to do some cheap user testing. |
 | [ldl](skills/ldl/SKILL.md) | Learn by explaining: write your current understanding, get precise corrections. I use it when I realize I don't really get what I'm doing. |
+| [agent-platform](skills/agent-platform/SKILL.md) | Run a bounded overnight agent loop steered live through HEART.md, with model routing, durable logs, and safe wakeups. |
 
 ## Install
 
