@@ -9,6 +9,18 @@ compatibility: Requires file access. Autonomous operation requires subagent and 
 
 Run **one bounded heartbeat at a time**. Never hold an LLM turn open with an infinite loop. Persist intent and state to disk, finish the turn, then let the scheduler wake the main agent again.
 
+## How the user uses it
+
+On first start, briefly explain:
+
+- `HEART.md` is the live control surface: the user may edit it at any time, including while the platform is running. Changes take effect on the next heartbeat.
+- `LOG.md` is the readable operational history: what ran, what changed, blockers, and what happens next.
+- `/agent-platform status` shows the current state and next wake without doing work.
+- `/agent-platform stop` cancels future wakeups but preserves HEART and LOG.
+- Work happens only inside the configured active window. Outside it, the platform schedules the next window start and spends no agent calls.
+
+Do not bury this in setup output. The user should understand how to steer and stop the platform before autonomous work begins.
+
 ## Durable control plane
 
 | File | Owner | Rule |
@@ -34,7 +46,9 @@ Do not add these files to git or `.gitignore` unless the user asks. `HEART.md` i
    - **inherit** — safe fallback when availability cannot be enumerated
    Use the cheapest sufficient model. Record identifiers and evidence in state and the first log entry.
 3. Ask one compact setup question for anything missing: heartbeat interval, active window, timezone, and maximum concurrent subagents. Default the maximum to `2`; do not invent the time settings.
-4. Create `.agent-platform/state.json`. If `HEART.md` is absent, create this minimal template and stop for the user to fill it unless their invocation already supplies the mission:
+4. If `HEART.md` is absent, do **not** silently drop a blank file and leave. Explain that HEART is the live-editable mission file and offer two concrete paths:
+   - **Interactive setup** — ask one question at a time to establish the mission, priorities, permissions, constraints, and stop conditions, then write the agreed HEART.
+   - **Edit directly** — create the template below, show its path, and pause until the user edits it.
 
 ```markdown
 # Mission
@@ -46,14 +60,17 @@ Do not add these files to git or `.gitignore` unless the user asks. `HEART.md` i
 # Stop conditions
 ```
 
-5. Create `LOG.md` if absent. If currently inside the active window, run the first heartbeat. Otherwise schedule exactly one wake at the next window start and stop.
+If the invocation already contains a clear mission, use it to draft HEART, show the draft, and ask only about missing permissions or stop conditions before starting.
+5. Create `.agent-platform/state.json` and `LOG.md` if absent.
+6. Print a compact start summary containing the HEART path, LOG path, active window, heartbeat interval, model routing, concurrency cap, and the commands `status` and `stop`. Explicitly say: **“You can edit HEART.md live; the next heartbeat will pick up the change.”**
+7. If currently inside the active window, run the first heartbeat. Otherwise schedule exactly one wake at the next window start and stop.
 
 ### `heartbeat`
 
 The main agent owns the heartbeat. Subagents may do work but must never schedule the next wake.
 
 1. **Gate on time first.** Run `scripts/window.py` from this skill with the configured window. If outside the window, schedule the returned `next_wake`, update state, and stop without spawning agents. The active window is a hard spending ceiling, not a target.
-2. Read `HEART.md` fully, hash it, and read only the recent tail of `LOG.md`. If HEART changed, discard any stale plan that conflicts with it.
+2. Read `HEART.md` fully, hash it, and read only the recent tail of `LOG.md`. If HEART changed, discard any stale plan that conflicts with it and note the change in the log.
 3. Check stop conditions and blockers. Stop the platform when instructed; otherwise select the smallest useful bounded work for this heartbeat.
 4. Delegate only when it helps:
    - subagents for focused independent tasks;
@@ -69,11 +86,11 @@ The main agent owns the heartbeat. Subagents may do work but must never schedule
 
 ### `status`
 
-Read state plus the latest log entry and report: running state, HEART hash/change status, model map, current workers, last result, and next wake. Do not perform work.
+Read state plus the latest log entry and report: running state, HEART path and latest hash/change status, model map, current workers, last result, and next wake. Remind the user that HEART is live-editable. Do not perform work.
 
 ### `stop`
 
-Cancel only scheduler tasks recorded in state, mark the platform stopped, append a final log entry, and leave `HEART.md` and `LOG.md` intact.
+Cancel only scheduler tasks recorded in state, mark the platform stopped, append a final log entry, and leave `HEART.md` and `LOG.md` intact. Tell the user that `/agent-platform start` resumes from those files later.
 
 ## Log shape
 
@@ -98,6 +115,8 @@ When running on Claude Code, read [`references/claude-code.md`](references/claud
 ## Anti-patterns
 
 - `while true`, shell `sleep`, or a model turn kept alive indefinitely.
+- Creating an empty HEART without explaining how the user controls it.
+- Hiding the live-edit and stop controls in verbose setup output.
 - A recurring schedule that fires outside the approved window.
 - Reading the entire growing `LOG.md` every heartbeat.
 - Spending calls merely to discover whether a model exists.
