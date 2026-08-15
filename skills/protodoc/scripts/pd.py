@@ -233,6 +233,22 @@ def list_pages(p: dict[str, Path]) -> list[dict]:
     return pages
 
 
+def resolve_page(p: dict[str, Path], rel: str) -> Path | None:
+    """Turn a requested path into a real doc page, or nothing.
+
+    `..` is not the only way out of a directory: an absolute path replaces the
+    root outright under pathlib, and a symlink walks out without either. Resolve
+    first, then insist on landing in one of the doc folders.
+    """
+    if not rel or rel.startswith("/") or Path(rel).is_absolute():
+        return None
+    page = (p["root"] / rel).resolve()
+    for section in SECTIONS:
+        if page.is_relative_to((p["root"] / section).resolve()):
+            return page if page.suffix == ".md" and page.is_file() else None
+    return None
+
+
 def snapshot(p: dict[str, Path]) -> None:
     dest = p["snapshot"]
     if dest.exists():
@@ -426,10 +442,23 @@ def make_handler(p: dict[str, Path]):
             self.end_headers()
             self.wfile.write(body)
 
+        def addressed_to_us(self) -> bool:
+            """Reject anything not addressed to loopback by name.
+
+            Binding 127.0.0.1 is not a boundary on its own: a hostile domain can
+            point its own DNS at 127.0.0.1, and the browser then treats this
+            server as that domain's origin. The Host header is what gives it away.
+            """
+            host = (self.headers.get("Host") or "").rsplit(":", 1)[0].strip("[]")
+            return host in ("localhost", "127.0.0.1", "::1")
+
         def _json(self, payload):
             self._send(json.dumps(payload).encode(), "application/json")
 
         def do_GET(self):
+            if not self.addressed_to_us():
+                self._send(b"not for this host", "text/plain", 403)
+                return
             url = urlparse(self.path)
             query = parse_qs(url.query)
             if url.path == "/":
@@ -451,8 +480,8 @@ def make_handler(p: dict[str, Path]):
                 })
             elif url.path == "/api/page":
                 rel = (query.get("p") or [""])[0]
-                page = p["root"] / rel
-                if ".." in rel or not page.is_file() or page.suffix != ".md":
+                page = resolve_page(p, rel)
+                if page is None:
                     self._json({"error": "no such page"})
                     return
                 baseline = p["snapshot"] / rel
@@ -480,11 +509,18 @@ def make_handler(p: dict[str, Path]):
                 self._send(b"not found", "text/plain", 404)
 
         def do_POST(self):
+            if not self.addressed_to_us():
+                self._send(b"not for this host", "text/plain", 403)
+                return
             if urlparse(self.path).path != "/api/event":
                 self._send(b"not found", "text/plain", 404)
                 return
-            # A page on any other origin can post here otherwise; the loopback
-            # bind is not a boundary once a browser is doing the asking.
+            # A form post can be aimed here from any page and needs no preflight,
+            # but it cannot set this content type — so requiring it, on top of the
+            # origin check, keeps drive-by writes out.
+            if self.headers.get_content_type() != "application/json":
+                self._send(b"send application/json", "text/plain", 415)
+                return
             origin = self.headers.get("Origin")
             if origin and urlparse(origin).netloc != self.headers.get("Host"):
                 self._send(b"cross-origin", "text/plain", 403)
