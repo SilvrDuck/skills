@@ -1,0 +1,1135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>protodoc</title>
+<style>
+  :root {
+    --vellum: #ECEEE8; --sheet: #fff; --ink: #1A211C; --dim: #5C6660;
+    --rule: #D3D8CF; --hair: #E4E7DF;
+    --comment: #3D3A9E; --suggest: #0F6E5C; --doubt: #A6215B;
+    --revise: #C08A2E; --wash: #FBF4DE;
+    --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --nav: 216px; --margin: 304px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--vellum); color: var(--ink); font-family: var(--sans); }
+  a { color: var(--comment); }
+  :focus-visible { outline: 2px solid var(--comment); outline-offset: 2px; }
+
+  /* ── chrome ─────────────────────────────────────────────────── */
+  header {
+    position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: 14px;
+    padding: 0 18px; height: 46px; background: var(--vellum);
+    border-bottom: 1px solid var(--rule);
+  }
+  .slug { font-weight: 620; font-size: 14px; letter-spacing: -.01em; color: var(--ink); text-decoration: none; }
+  .slug:hover { text-decoration: underline; }
+  .chip {
+    font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; font-weight: 600;
+    padding: 3px 8px; border: 1px solid var(--rule); border-radius: 3px; color: var(--dim);
+  }
+  .tally { margin-left: auto; font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  #busy {
+    display: flex; align-items: center; gap: 7px; font-size: 12px;
+    padding: 3px 10px 3px 8px; border: 1px solid var(--rule); border-radius: 20px;
+    color: var(--dim);
+  }
+  #busy[hidden] { display: none; }
+  #busy i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  #busy.working i { animation: beat 1.1s ease-in-out infinite; }
+  /* only a question earns the colour and the summons */
+  #busy.waiting { color: var(--doubt); border-color: #A6215B44; background: #A6215B0A; font-weight: 560; }
+  #busy.waiting i { animation: beat .8s ease-in-out infinite; }
+  #busy.deaf { color: #8A5E10; border-color: #C08A2E55; background: #C08A2E12; }
+  @keyframes beat { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.72); } }
+  .history { display: flex; gap: 2px; }
+  .history button { padding: 3px 8px; font-size: 14px; line-height: 1; color: var(--dim); }
+  .history button:not(:disabled):hover { color: var(--ink); }
+  button {
+    font: inherit; font-size: 12.5px; color: var(--ink); background: var(--sheet);
+    border: 1px solid var(--rule); border-radius: 4px; padding: 5px 11px; cursor: pointer;
+  }
+  button:hover { border-color: var(--dim); }
+  button.go { background: var(--ink); color: var(--vellum); border-color: var(--ink); font-weight: 560; }
+  button.go:hover { opacity: .88; }
+  button:disabled { opacity: .45; cursor: default; }
+
+  /* ── frame ──────────────────────────────────────────────────── */
+  main { display: grid; grid-template-columns: var(--nav) minmax(0, 1fr) var(--margin); align-items: start; }
+
+  nav { position: sticky; top: 46px; max-height: calc(100vh - 46px); overflow-y: auto; padding: 20px 12px 40px 18px; }
+  nav h3 {
+    font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim);
+    margin: 18px 0 7px; font-weight: 600;
+  }
+  nav a {
+    display: flex; gap: 7px; align-items: baseline; padding: 4px 8px; margin-left: -8px;
+    border-radius: 4px; font-size: 13px; color: var(--ink); text-decoration: none; line-height: 1.35;
+  }
+  nav a:hover { background: #E2E5DD; }
+  nav a[aria-current] { background: var(--sheet); font-weight: 580; box-shadow: inset 2px 0 0 var(--ink); }
+  nav .n { font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; margin-left: auto; }
+  nav .empty { font-size: 12px; color: var(--dim); font-style: italic; padding: 4px 0; }
+
+  /* ── sheet ──────────────────────────────────────────────────── */
+  .sheet-wrap { padding: 26px 0 140px; display: flex; justify-content: center; }
+  .sheet {
+    width: min(100%, 720px); background: var(--sheet); border: 1px solid var(--hair);
+    padding: 44px 52px 60px; position: relative;
+  }
+  #doc { font-family: var(--serif); font-size: 17px; line-height: 1.62; position: relative; z-index: 1; }
+  #doc h1 { font-size: 30px; line-height: 1.2; margin: 0 0 22px; letter-spacing: -.015em; }
+  #doc h2 { font-size: 21px; margin: 34px 0 10px; letter-spacing: -.01em; }
+  #doc h3 { font-size: 17.5px; margin: 24px 0 8px; }
+  #doc p { margin: 0 0 15px; }
+  #doc ul, #doc ol { margin: 0 0 15px; padding-left: 22px; }
+  #doc li { margin: 4px 0; }
+  #doc blockquote {
+    margin: 0 0 15px; padding-left: 16px; border-left: 2px solid var(--rule); color: var(--dim);
+  }
+  #doc hr { border: 0; border-top: 1px solid var(--hair); margin: 30px 0; }
+  #doc code { font-family: var(--mono); font-size: .85em; background: #F3F5F1; padding: 1px 4px; border-radius: 3px; }
+  #doc pre { background: #F3F5F1; padding: 13px 15px; border-radius: 5px; overflow-x: auto; margin: 0 0 15px; }
+  #doc pre code { background: none; padding: 0; font-size: 12.5px; }
+  #doc table { border-collapse: collapse; width: 100%; margin: 0 0 15px; font-size: 14.5px; font-family: var(--sans); }
+  #doc th, #doc td { border: 1px solid var(--hair); padding: 6px 10px; text-align: left; vertical-align: top; }
+  #doc th { background: #F5F7F3; font-weight: 600; }
+  #doc img { max-width: 100%; }
+  #doc pre.mermaid { background: none; text-align: center; }
+  #doc pre.mermaid svg { width: 100%; max-width: 100%; height: auto; }
+
+  /* rigidity is a status, not code — it should not read as a literal */
+  .rig {
+    font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: .07em;
+    text-transform: uppercase; padding: 1.5px 6px; border-radius: 3px; vertical-align: 1px;
+    white-space: nowrap; user-select: none;  /* keep the badge out of quoted selections */
+  }
+  .rig.pinned { background: #A6215B15; color: var(--doubt); }
+  .rig.negotiable { background: #C08A2E22; color: #8A5E10; }
+  .rig.constrained { background: #3D3A9E15; color: var(--comment); }
+
+  /* left gutter: what the agent changed since you last read */
+  .blk { position: relative; }
+  .blk[data-changed] { padding-left: 14px; margin-left: -14px; }
+  .blk[data-changed]::before {
+    content: ""; position: absolute; left: 0; top: 3px; bottom: 3px;
+    width: 2px; background: var(--revise); border-radius: 2px;
+  }
+  .cut {
+    font-family: var(--sans); font-size: 11px; color: var(--revise); letter-spacing: .04em;
+    border-top: 1px dashed var(--revise); padding-top: 3px; margin: 0 0 14px;
+  }
+
+  /* screen mockups declare their own world */
+  .screen {
+    font-family: var(--sans); font-size: 13.5px; line-height: 1.45; color: var(--ink);
+    background: var(--sheet); border: 1px solid var(--rule); border-radius: 9px;
+    overflow: hidden; margin: 0 0 18px; box-shadow: 0 1px 3px rgba(26,33,28,.07);
+  }
+  .screen[data-label]::before {
+    content: attr(data-label); display: block; padding: 6px 12px; background: #F3F5F1;
+    border-bottom: 1px solid var(--hair); font-size: 10.5px; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--dim); font-weight: 600;
+  }
+  .screen > * { padding-left: 14px; padding-right: 14px; }
+
+  /* highlights */
+  mark { background: none; color: inherit; border-bottom: 2px solid; cursor: pointer; }
+  mark.comment { border-color: var(--comment); background: #3D3A9E12; }
+  mark.suggest { border-color: var(--suggest); background: #0F6E5C12; }
+  mark.doubt   { border-color: var(--doubt);   background: #A6215B12; }
+  mark.done { border-bottom: 1px dotted var(--rule); background: none; }
+  .region.done { background: #1A211C08; }
+  mark.lit { background: #FDF3C7; }
+
+  /* ── margin rail ────────────────────────────────────────────── */
+  .rail { position: relative; padding: 26px 18px 140px 0; border-left: 1px solid var(--hair); min-height: 60vh; }
+  .rail .none { font-size: 12.5px; color: var(--dim); line-height: 1.5; padding-left: 16px; }
+  .note {
+    position: absolute; left: 16px; right: 18px; background: var(--sheet);
+    border: 1px solid var(--hair); border-left: 3px solid var(--rule); border-radius: 5px;
+    padding: 9px 11px; font-size: 12.5px; line-height: 1.45;
+    transition: box-shadow .15s, transform .15s;
+  }
+  .note.comment { border-left-color: var(--comment); }
+  .note.suggest { border-left-color: var(--suggest); }
+  .note.doubt   { border-left-color: var(--doubt); }
+  .note:hover, .note.lit { box-shadow: 0 2px 10px rgba(26,33,28,.13); }
+  .note::before {
+    content: ""; position: absolute; left: -16px; top: 13px; width: 16px;
+    border-top: 1px solid var(--rule);
+  }
+  /* answered notes fold away but stay on the page — reopening is one click,
+     deleting is a different button entirely */
+  .note.done { background: #F6F7F4; }
+  .note.done .head { cursor: pointer; }
+  .note.done > *:not(.head) { display: none; }
+  .note.done .verb, .note.done .id { opacity: .6; }
+  .reopen {
+    font-size: 13px; line-height: 1; min-width: 26px; min-height: 24px; padding: 0 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 0; border-radius: 4px; background: none; color: var(--dim); cursor: pointer;
+  }
+  .reopen:hover { background: #E4E7DF; color: var(--ink); }
+  .note .head { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+  .note .verb { font-size: 10px; letter-spacing: .09em; text-transform: uppercase; font-weight: 700; }
+  .note.comment .verb { color: var(--comment); }
+  .note.suggest .verb { color: var(--suggest); }
+  .note.doubt   .verb { color: var(--doubt); }
+  .note .id { font-size: 10.5px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .note .acts { margin-left: auto; display: flex; gap: 4px; }
+  .kill {
+    font-family: var(--sans); font-size: 12px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 26px; min-height: 24px; padding: 0 6px; margin: -3px -4px -3px 0;
+    border: 0; border-radius: 4px; background: none; color: var(--doubt);
+    cursor: pointer; user-select: none;
+  }
+  .kill:hover { background: #A6215B15; }
+  .note .quote {
+    font-family: var(--serif); font-size: 12.5px; color: var(--dim);
+    border-left: 2px solid var(--hair); padding-left: 7px; margin-bottom: 5px;
+  }
+  /* who said what, at a glance: your turns sit on the card, mine are inset */
+  .note .turn { margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--hair); }
+  .note .turn:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
+  .note .who {
+    display: block; font-size: 9px; letter-spacing: .11em; text-transform: uppercase;
+    font-weight: 700; color: var(--dim); margin-bottom: 3px;
+  }
+  .note .turn.theirs {
+    background: #F3F5F1; margin-left: -11px; margin-right: -11px; padding: 7px 11px;
+    border-top-color: var(--rule);
+  }
+  .note .turn.theirs .who { color: var(--comment); }
+  .note .say {
+    margin-top: 7px; padding: 5px 7px; border: 1px dashed var(--rule); border-radius: 4px;
+    outline: none; color: var(--ink); min-height: 1.4em;
+  }
+  .note .say:empty::before { content: attr(data-empty); color: var(--dim); }
+  .note .say:focus { border-style: solid; border-color: var(--comment); background: var(--sheet); }
+  .note .state {
+    display: inline-block; font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+    font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-bottom: 3px;
+  }
+  .state.applied { background: #0F6E5C18; color: var(--suggest); }
+  .state.applied-differently { background: #C08A2E22; color: #8A5E10; }
+  .state.pushed-back { background: #A6215B15; color: var(--doubt); }
+  .state.needs-you { background: #3D3A9E15; color: var(--comment); }
+  .orphan { font-size: 11px; color: var(--doubt); font-weight: 600; margin-bottom: 4px; }
+  .note .body { outline: none; border-radius: 3px; }
+  .note .body:hover { background: #F3F5F1; box-shadow: 0 0 0 3px #F3F5F1; }
+  .note .body:focus { background: #FDF3C766; box-shadow: 0 0 0 3px #FDF3C766; }
+  .note .body:empty::before { content: attr(data-empty); color: var(--dim); font-style: italic; }
+  /* Notes about everything belong to no paragraph, so they ride the top of the
+     margin instead of pretending to point at whatever is scrolled into view. */
+  #globals { position: sticky; top: 56px; z-index: 5; padding: 0 18px 0 16px; }
+  #globals .note, #globals #compose {
+    position: static; left: auto; right: auto; margin: 0 0 8px; display: block;
+  }
+  #globals .note::before, #globals #compose::before { display: none; }
+  #globals .toggle {
+    display: flex; align-items: center; gap: 6px; width: 100%; margin-bottom: 6px;
+    font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; font-weight: 650;
+    color: var(--dim); background: var(--vellum); border: 1px solid var(--hair);
+    border-radius: 4px; padding: 5px 8px; cursor: pointer;
+  }
+  #globals .toggle:hover { color: var(--ink); border-color: var(--rule); }
+  /* not one of the three verbs, so it takes a neutral edge rather than a colour
+     that would imply comment / suggest / doubt */
+  .note.general { border-left-color: var(--rule); }
+  .note.general .verb { color: var(--dim); }
+
+  /* ── composer: docks in the margin, never over the text ─────── */
+  #compose {
+    position: absolute; left: 16px; right: 18px; z-index: 70; display: none;
+    background: var(--sheet); border: 1px solid var(--rule); border-left: 3px solid var(--comment);
+    border-radius: 5px; padding: 9px 11px; box-shadow: 0 4px 18px rgba(26,33,28,.16);
+  }
+  #compose::before {
+    content: ""; position: absolute; left: -16px; top: 13px; width: 16px; border-top: 1px solid var(--rule);
+  }
+  #compose textarea {
+    width: 100%; min-height: 56px; padding: 6px 8px; font: inherit; font-size: 12.5px;
+    border: 1px solid var(--rule); border-radius: 4px; resize: vertical;
+    background: var(--sheet); color: var(--ink);
+  }
+  #compose .foot { display: flex; align-items: center; gap: 5px; margin-top: 6px; }
+  #compose .hint { font-size: 10.5px; color: var(--dim); }
+  #compose .foot button { padding: 3px 9px; font-size: 11.5px; }
+  #compose .foot .doubt { margin-left: auto; color: var(--doubt); border-color: #A6215B40; }
+  #compose .foot .doubt:hover { border-color: var(--doubt); }
+  kbd {
+    font: inherit; font-size: 10px; border: 1px solid var(--rule); border-bottom-width: 2px;
+    border-radius: 3px; padding: 0 3px; color: var(--ink);
+  }
+  /* the selection stays visible while you type, without touching the markup */
+  .pending {
+    position: absolute; z-index: 1; pointer-events: none; background: #FDF3C7;
+    mix-blend-mode: multiply; border-bottom: 2px solid var(--revise);
+  }
+
+  /* ── suggesting: the edit lives in the page, permanently ────── */
+  /* struck text is a record of what was there, not part of the document any
+     more — selecting it would put dead words into the next quote */
+  .edit del {
+    color: var(--dim); text-decoration: line-through; text-decoration-color: var(--doubt);
+    text-decoration-thickness: 1px; margin-right: 4px; user-select: none;
+  }
+  .edit .ins {
+    color: var(--suggest); background: #0F6E5C10; border-bottom: 2px solid var(--suggest);
+    padding: 0 2px; outline: none;
+  }
+  .edit .ins:focus { background: #0F6E5C1F; }
+  /* an emptied-out suggestion still needs somewhere to click and type */
+  .edit .ins:empty { padding: 0 7px; }
+  .edit .kill {
+    font-size: 11px; min-width: 22px; min-height: 22px; padding: 0 4px;
+    margin: -4px 0 -4px 1px; vertical-align: middle;
+  }
+  .edit.done del { text-decoration-color: var(--rule); }
+  .edit.done .ins { color: var(--dim); background: none; border-bottom: 1px dotted var(--rule); }
+
+  /* ── notes on a whole block: diagrams, screens, images ──────── */
+  .blk { position: relative; }
+  /* Regions are painted as single rectangles on a layer behind the text, so a
+     run of blocks reads as one shape instead of a stack of boxes with seams. */
+  #layer { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+  .region { position: absolute; border-radius: 4px; }
+  .region.comment { background: #3D3A9E12; }
+  .region.doubt   { background: #A6215B12; }
+  .region.suggest { background: #0F6E5C12; }
+  .region.wash, .region.lit { background: #FDF3C7; }
+  /* the margin is the affordance — reading the text must not paint anything */
+  #gutter { position: absolute; top: 0; bottom: 0; right: 0; width: 46px; z-index: 3; cursor: pointer; }
+  /* purely a picture: if the bar could take the pointer, sliding down it would
+     never reach the gutter underneath and the scope could not change */
+  #band {
+    position: absolute; right: 2px; width: 34px; display: none; z-index: 2; pointer-events: none;
+    align-items: flex-start; justify-content: center; padding-top: 7px;
+    border: 0; border-radius: 4px; background: #FDF3C7; color: var(--dim);
+    font: inherit; font-size: 16px; line-height: 1; user-select: none;
+  }
+  #gutter:hover ~ #band { background: #F6E5A6; color: var(--comment); }
+
+  @media (max-width: 1180px) {
+    main { grid-template-columns: var(--nav) minmax(0, 1fr); }
+    .rail { grid-column: 2; border-left: 0; padding: 0 0 120px; }
+    .note { position: static !important; margin: 0 auto 10px; max-width: 720px; left: auto; right: auto; }
+    .note::before { display: none; }
+  }
+  @media (max-width: 860px) {
+    main { grid-template-columns: minmax(0, 1fr); }
+    nav { position: static; max-height: none; border-bottom: 1px solid var(--rule); }
+    .rail { grid-column: 1; }
+    .sheet { padding: 28px 22px 40px; border-left: 0; border-right: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<header>
+  <a class="slug" id="slug" href="#" title="Back to the first page">protodoc</a>
+  <span class="chip" id="phase">—</span>
+  <span class="chip" id="mode">—</span>
+  <span class="tally" id="tally"></span>
+  <span class="history">
+    <button id="undo" title="Undo">↶</button>
+    <button id="redo" title="Redo">↷</button>
+  </span>
+  <button id="general" title="A note about the whole project, not any one page">Project note <kbd>N</kbd></button>
+  <span id="busy" hidden><i></i><span id="busy-text"></span></span>
+  <button class="go" id="send">Send notes</button>
+</header>
+
+<main>
+  <nav id="nav"></nav>
+  <div class="sheet-wrap">
+    <article class="sheet">
+      <div id="layer"></div>
+      <div id="gutter"></div>
+      <button id="band" title="Note on this section">+</button>
+      <div id="doc"></div>
+    </article>
+  </div>
+  <div class="rail" id="rail"><div id="globals"></div></div>
+</main>
+
+<div id="compose">
+  <textarea id="compose-text" placeholder="What about this?"></textarea>
+  <div class="foot">
+    <span class="hint" id="compose-hint"></span>
+    <button class="doubt" id="compose-doubt" title="Flag it as wrong without saying why">Doubt</button>
+    <button class="go" id="compose-save">Add</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const doc = $('doc'), rail = $('rail'), compose = $('compose');
+  const layer = $('layer'), band = $('band'), gutter = $('gutter'), globals = $('globals');
+  const wash = document.createElement('div');
+  document.querySelector('.sheet').append(wash);
+  let tree = null, current = null, pending = null, version = '', notes = [], globalsOpen = false;
+  const unfolded = new Set();
+
+  gutter.onmousemove = (e) => {
+    const block = blockAt(e.clientY);
+    if (block && block !== armed) arm(block);
+  };
+  gutter.onmouseleave = disarmSoon;
+  gutter.onclick = (e) => {
+    // Closing a composer disarms; without this fallback a second note on the
+    // same block needs a pointless mouse waggle to re-arm first.
+    const block = armed || blockAt(e.clientY);
+    if (!block) return;
+    arm(block);
+    showPending(scopeOf(block));
+    openComposer({
+      quote: describe(block), sig: block.dataset.sig, heading: block.dataset.h,
+      top: block.getBoundingClientRect().top + window.scrollY,
+    });
+  };
+
+  const post = (body) =>
+    fetch('/api/event', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(body) }).then((r) => r.json()).catch(() => null);
+
+  // Undo appends a compensating event; the log is never rewritten, so the
+  // agent's record of what you did stays intact either way.
+  const past = [], future = [];
+  function remember(step) { past.push(step); future.length = 0; syncHistory(); }
+  function syncHistory() {
+    $('undo').disabled = !past.length;
+    $('redo').disabled = !future.length;
+  }
+  async function step(from, to, key) {
+    const item = from.pop();
+    if (!item) return;
+    await post(item[key]);
+    to.push(item);
+    syncHistory();
+    refresh(true);
+  }
+  $('undo').onclick = () => step(past, future, 'undo');
+  $('redo').onclick = () => step(future, past, 'redo');
+  syncHistory();
+  document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() !== 'z' || !(e.metaKey || e.ctrlKey)) return;
+    const on = document.activeElement;
+    if (on && (on.isContentEditable || on.tagName === 'TEXTAREA' || on.tagName === 'INPUT')) return;
+    e.preventDefault();
+    e.shiftKey ? step(future, past, 'redo') : step(past, future, 'undo');
+  });
+  const erase = (id) => ({ undo: { type: 'undelete', id }, redo: { type: 'delete', id } });
+  const create = (id) => ({ undo: { type: 'delete', id }, redo: { type: 'undelete', id } });
+  const reword = (id, before, after) =>
+    ({ undo: { type: 'edit', id, text: before }, redo: { type: 'edit', id, text: after } });
+
+  // Three things worth saying, and nothing else: nobody is listening, I am
+  // working, or I asked you something. Only the last one summons you.
+  function showAgent(agent) {
+    const busy = $('busy'), text = $('busy-text');
+    const kind = !agent.listening ? 'deaf' : agent.state === 'waiting' ? 'waiting'
+      : agent.state === 'working' ? 'working' : '';
+    busy.hidden = !kind;
+    busy.className = kind;
+    if (kind === 'deaf') text.textContent = 'nobody is listening — notes will wait';
+    if (kind === 'working') text.textContent = 'answering your notes';
+    if (kind === 'waiting') text.textContent = agent.note || 'needs you — back to the chat';
+    const mark = kind === 'waiting' ? '● ' : '';
+    document.title = mark + document.title.replace(/^● /, '');
+  }
+
+  // ── nav ───────────────────────────────────────────────────────
+  async function loadTree() {
+    tree = await (await fetch('/api/tree')).json();
+    $('slug').textContent = tree.slug;
+    const first = tree.pages[0];
+    if (first) {
+      $('slug').href = '#' + first.path;
+      $('slug').onclick = (e) => { e.preventDefault(); show(first.path); };
+    }
+    $('phase').textContent = tree.phase;
+    $('mode').textContent = tree.mode;
+    const c = tree.counts;
+    $('tally').textContent = c.open || c.resolved
+      ? `${c.open} open · ${c.resolved} resolved`
+      : 'no notes yet';
+    $('send').textContent = c.open ? `Send ${c.open} note${c.open > 1 ? 's' : ''}` : 'Send notes';
+    $('send').disabled = !c.open;
+    showAgent(tree.agent || { listening: false, state: 'idle', note: '' });
+
+    rail.dataset.ready = '1';
+    const nav = $('nav');
+    nav.innerHTML = '';
+    for (const section of ['user-doc', 'tech-doc']) {
+      const pages = tree.pages.filter((p) => p.section === section);
+      const h = document.createElement('h3');
+      h.textContent = section === 'user-doc' ? 'What it does' : 'How it’s built';
+      nav.append(h);
+      if (!pages.length) {
+        const e = document.createElement('div');
+        e.className = 'empty';
+        e.textContent = 'not written yet';
+        nav.append(e);
+        continue;
+      }
+      for (const page of pages) {
+        const a = document.createElement('a');
+        a.href = '#' + page.path;
+        a.textContent = page.title;
+        if (page.open) a.insertAdjacentHTML('beforeend', `<span class="n">${page.open}</span>`);
+        if (page.path === current) a.setAttribute('aria-current', 'page');
+        a.onclick = (e) => { e.preventDefault(); show(page.path); };
+        nav.append(a);
+      }
+    }
+    if (!current && tree.pages.length) show(tree.pages[0].path);
+  }
+
+  // ── page ──────────────────────────────────────────────────────
+  async function show(path, keepScroll) {
+    current = path;
+    if (location.hash.slice(1) !== path) location.hash = path;  // writing it always would jump
+    const y = keepScroll ? window.scrollY : 0;
+    const page = await (await fetch('/api/page?p=' + encodeURIComponent(path))).json();
+    if (page.error) { doc.innerHTML = '<p>That page is gone.</p>'; return; }
+    document.title = page.title + ' — protodoc';
+    doc.innerHTML = page.html;
+    // Cross-references are written as ordinary relative markdown links; make
+    // them navigate the site instead of asking the browser for a .md file.
+    for (const link of doc.querySelectorAll('a[href$=".md"]')) {
+      const href = link.getAttribute('href');
+      const target = href.includes('/') ? href : path.split('/')[0] + '/' + href;
+      link.setAttribute('href', '#' + target);
+      link.onclick = (e) => { e.preventDefault(); show(target); };
+    }
+    notes = page.annotations;
+    highlight();
+    drawMermaid();
+    paintRegions();
+    drawRail();
+    for (const a of $('nav').querySelectorAll('a'))
+      a.toggleAttribute('aria-current', a.getAttribute('href') === '#' + path);
+    window.scrollTo(0, y);
+  }
+
+  function textRange(root, needle) {
+    // Skip text that already belongs to a note. Without this a second note on
+    // the same words anchors *inside* the first one's markup and they nest.
+    const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => n.parentElement && n.parentElement.closest('.edit, mark[data-note]')
+        ? NodeFilter.FILTER_REJECT
+        : NodeFilter.FILTER_ACCEPT,
+    });
+    const nodes = [];
+    let text = '';
+    for (let n; (n = walk.nextNode());) { nodes.push([n, text.length]); text += n.nodeValue; }
+    const start = text.indexOf(needle);
+    if (start < 0) return null;
+    // An end offset that lands exactly on a node boundary must stay in the node
+    // it closes, or the range straddles an element and extraction clones it.
+    const at = (pos, isEnd) => {
+      for (let i = nodes.length - 1; i >= 0; i--) {
+        const [node, from] = nodes[i], to = from + node.nodeValue.length;
+        if (isEnd ? pos > from && pos <= to : pos >= from && pos < to) return [node, pos - from];
+      }
+      return [nodes[0][0], 0];
+    };
+    const [sn, so] = at(start, false), [en, eo] = at(start + needle.length, true);
+    const range = document.createRange();
+    try { range.setStart(sn, so); range.setEnd(en, eo); } catch { return null; }
+    return range;
+  }
+
+  // A suggestion is an edit to the page, so it renders in the page and stays
+  // editable there. Typing saves itself; the ✕ withdraws it.
+  function suggestion(note) {
+    const holder = document.createElement('span');
+    holder.className = note.status === 'resolved' ? 'edit done' : 'edit';
+    holder.dataset.note = note.id;
+    const gone = document.createElement('del');
+    gone.textContent = note.quote;
+    const ins = document.createElement('span');
+    ins.className = 'ins';
+    ins.spellcheck = false;
+    ins.textContent = note.text;
+    // An answered suggestion is a record, not a pending edit: it stops being
+    // editable and hands its controls to the card in the margin.
+    if (note.status === 'resolved') {
+      holder.append(gone, ins);
+      return holder;
+    }
+    ins.contentEditable = 'plaintext-only';
+    const kill = document.createElement('button');
+    kill.className = 'kill';
+    kill.textContent = '✕';
+    kill.title = 'Withdraw this suggestion';
+    kill.onmousedown = (e) => e.preventDefault();
+    kill.onclick = async () => {
+      await post({ type: 'delete', id: note.id });
+      remember(erase(note.id));
+      refresh(true);
+    };
+
+    // Empty is a real suggestion — "take these words out" — so nothing here
+    // withdraws itself. The ✕ is the only way out.
+    let pause, base = note.text;
+    const save = () => post({ type: 'edit', id: note.id, text: ins.textContent.trim() });
+    ins.addEventListener('focus', () => { base = ins.textContent.trim(); });
+    ins.addEventListener('input', () => { clearTimeout(pause); pause = setTimeout(save, 500); });
+    ins.addEventListener('blur', () => {
+      clearTimeout(pause);
+      const text = ins.textContent.trim();
+      if (text !== base) remember(reword(note.id, base, text));
+      base = text;
+      save();
+    });
+    ins.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); ins.blur(); } });
+
+    holder.append(gone, ins, kill);
+    return holder;
+  }
+
+  function highlight() {
+    for (const note of notes) {
+      note.orphaned = true;
+      const scope = doc.querySelector(`.blk[data-h="${CSS.escape(note.heading || '')}"]`) || doc;
+
+      if (note.sig) {                                    // anchored to a block or a section
+        const block = doc.querySelector(`.blk[data-sig="${CSS.escape(note.sig)}"]`);
+        if (!block) continue;
+        note.anchor = block;
+        note.orphaned = false;
+        continue;
+      }
+      if (!note.quote) { note.orphaned = false; continue; }
+
+      const range = textRange(scope, note.quote) || textRange(doc, note.quote);
+      if (!range) continue;
+      try {
+        if (note.verb === 'suggest') {
+          range.deleteContents();
+          range.insertNode(suggestion(note));
+        } else {
+          const mark = document.createElement('mark');
+          mark.className = note.status === 'resolved' ? `${note.verb} done` : note.verb;
+          mark.dataset.note = note.id;
+          mark.append(range.extractContents());
+          range.insertNode(mark);
+        }
+        note.orphaned = false;
+      } catch { }
+    }
+    // The link runs both ways: point at the text, its note lights up too.
+    for (const anchor of doc.querySelectorAll('mark[data-note], .edit[data-note]')) {
+      anchor.onmouseenter = () => lightUp(anchor.dataset.note);
+      anchor.onmouseleave = unlight;
+    }
+  }
+
+  // A heading owns everything under it until a heading of the same rank or
+  // higher, so noting a title takes the whole section with it.
+  function scopeOf(block) {
+    const head = block.querySelector('h1, h2, h3, h4, h5, h6');
+    if (!head) return [block];
+    const rank = +head.tagName[1];
+    const run = [block];
+    for (let el = block.nextElementSibling; el; el = el.nextElementSibling) {
+      if (!el.classList.contains('blk')) continue;
+      const next = el.querySelector('h1, h2, h3, h4, h5, h6');
+      if (next && +next.tagName[1] <= rank) break;
+      run.push(el);
+    }
+    return run;
+  }
+
+  // Where a run of blocks sits, in the sheet's own coordinates.
+  function boxOf(run) {
+    const sheet = document.querySelector('.sheet').getBoundingClientRect();
+    const first = run[0].getBoundingClientRect();
+    const last = run[run.length - 1].getBoundingClientRect();
+    return {
+      top: first.top - sheet.top - 6,
+      left: first.left - sheet.left - 10,
+      width: first.width + 20,
+      height: last.bottom - first.top + 12,
+    };
+  }
+
+  function place(el, box) {
+    el.style.top = box.top + 'px';
+    el.style.height = box.height + 'px';
+    if (el !== band) {
+      el.style.left = box.left + 'px';
+      el.style.width = box.width + 'px';
+    }
+  }
+
+  // Resting highlights for every note anchored to a block or a section.
+  function paintRegions() {
+    layer.innerHTML = '';
+    for (const note of notes) {
+      if (!note.anchor || !note.anchor.isConnected) continue;
+      const region = document.createElement('div');
+      region.className = `region ${note.status === 'resolved' ? 'done' : note.verb}`;
+      region.dataset.note = note.id;
+      place(region, boxOf(scopeOf(note.anchor)));
+      layer.append(region);
+    }
+  }
+
+  // Hovering anywhere on a block arms the whole scope: one wash, one full-height
+  // bar in the gutter. Leaving is deferred so roaming between them can't strobe.
+  let armed = null, disarm;
+  function arm(block) {
+    clearTimeout(disarm);
+    if (pending) return;
+    armed = block;
+    const box = boxOf(scopeOf(block));
+    wash.className = 'region wash';
+    place(wash, box);
+    place(band, box);
+    wash.style.display = 'block';
+    band.style.display = 'flex';
+  }
+  function disarmSoon() {
+    clearTimeout(disarm);
+    disarm = setTimeout(() => {
+      if (pending) return;
+      armed = null;
+      wash.style.display = 'none';
+      band.style.display = 'none';
+    }, 160);
+  }
+
+  function blockAt(y) {
+    for (const block of doc.querySelectorAll('.blk')) {
+      const r = block.getBoundingClientRect();
+      if (y >= r.top - 4 && y <= r.bottom + 4) return block;
+    }
+    return null;
+  }
+
+  function describe(block) {
+    const head = block.querySelector('h1, h2, h3, h4, h5, h6');
+    if (head) return `the “${head.textContent.trim()}” section`;
+    const screen = block.querySelector('.screen[data-label]');
+    if (screen) return `the “${screen.dataset.label}” screen`;
+    if (block.querySelector('pre.mermaid, svg')) return 'the diagram';
+    const img = block.querySelector('img');
+    if (img) return `the image “${img.alt || 'untitled'}”`;
+    const copy = block.cloneNode(true);
+    for (const dead of copy.querySelectorAll(DEAD)) dead.remove();
+    const text = copy.textContent.trim().replace(/\s+/g, ' ');
+    return text.length > 80 ? text.slice(0, 80) + '…' : text;
+  }
+
+  function lightUp(id) {
+    unlight();
+    const note = rail.querySelector(`.note[data-note="${id}"]`);
+    if (note) note.classList.add('lit');
+    for (const anchor of document.querySelectorAll(
+      `mark[data-note="${id}"], .edit[data-note="${id}"], .region[data-note="${id}"]`))
+      anchor.classList.add('lit');
+  }
+  function unlight() {
+    for (const el of document.querySelectorAll('.lit')) el.classList.remove('lit');
+  }
+
+  const LABEL = {
+    'applied': 'Applied', 'applied-differently': 'Did it differently',
+    'pushed-back': 'Pushed back', 'needs-you': 'Needs you',
+  };
+
+  function buildNote(note) {
+    const general = note.page === '*';
+    const label = general
+      ? (note.verb === 'comment' ? 'project' : `project · ${note.verb}`)
+      : note.verb;
+    const resolved = note.status === 'resolved';
+    const done = resolved && !unfolded.has(note.id);
+    const answers = note.turns.filter((t) => t.who === 'agent');
+    const last = answers[answers.length - 1];
+    const card = document.createElement('div');
+    card.className = `note ${note.verb}${general ? ' general' : ''}${done ? ' done' : ''}`;
+    card.dataset.note = note.id;
+    card.innerHTML = `
+      <div class="head">
+        <span class="verb">${label}</span><span class="id">#${note.id}</span>
+        ${resolved && last ? `<span class="state ${esc(last.state)}">${esc(LABEL[last.state] || last.state)}</span>` : ''}
+        <span class="acts">
+          ${resolved ? `<button class="reopen" data-reopen="${note.id}" title="Reopen — I want to keep talking about this">↺</button>` : ''}
+          <button class="kill" data-kill="${note.id}" title="Delete this note">✕</button>
+        </span>
+      </div>
+      ${note.orphaned ? '<div class="orphan">What this pointed to is gone.</div>' : ''}
+      ${note.quote ? `<div class="quote">${esc(note.quote)}</div>` : ''}
+      <div class="turn mine">
+        <span class="who">you</span>
+        <div class="body" data-empty="no reason given — the quote is the doubt">${esc(note.text)}</div>
+      </div>
+      ${note.turns.map((t) => t.who === 'agent'
+        ? `<div class="turn theirs"><span class="who">protodoc</span>
+             <span class="state ${esc(t.state)}">${esc(LABEL[t.state] || t.state)}</span>
+             <div>${esc(t.text)}</div></div>`
+        : `<div class="turn mine"><span class="who">you</span><div>${esc(t.text)}</div></div>`).join('')}
+      <div class="say" data-empty="Reply…" contenteditable="plaintext-only" spellcheck="false"></div>`;
+    card.onmouseenter = () => lightUp(note.id);
+    card.onmouseleave = unlight;
+    // A resolved note folds down to its verdict; the head unfolds it again.
+    // Redrawing rather than toggling a class, so the rest of the stack moves
+    // out of the way instead of being grown over.
+    if (resolved) card.querySelector('.head').onclick = (e) => {
+      if (e.target.closest('button')) return;
+      unfolded.has(note.id) ? unfolded.delete(note.id) : unfolded.add(note.id);
+      drawRail();
+    };
+
+    // Answering back continues the thread and reopens the question, so there is
+    // no separate "reopen then type" dance.
+    const say = card.querySelector('.say');
+    say.addEventListener('keydown', async (e) => {
+      if (e.key === 'Escape') { say.textContent = ''; say.blur(); return; }
+      if (e.key !== 'Enter' || e.shiftKey) return;
+      e.preventDefault();
+      const text = say.textContent.trim();
+      if (!text) return;
+      say.textContent = '';
+      const n = note.turns.length;               // the slot this turn will land in
+      await post({ type: 'followup', id: note.id, text });
+      remember({ undo: { type: 'retract', id: note.id, n }, redo: { type: 'unretract', id: note.id, n } });
+      unfolded.add(note.id);
+      refresh(true);
+    });
+
+    // Notes stay editable after the fact — rewording one beats deleting and retyping.
+    const body = card.querySelector('.body');
+    body.contentEditable = 'plaintext-only';
+    body.spellcheck = false;
+    let pause, base = note.text;
+    const save = () => post({ type: 'edit', id: note.id, text: body.textContent.trim() });
+    body.addEventListener('focus', () => { base = body.textContent.trim(); });
+    body.addEventListener('input', () => { clearTimeout(pause); pause = setTimeout(save, 500); });
+    // One undo step per sitting, not one per keystroke pause.
+    body.addEventListener('blur', () => {
+      clearTimeout(pause);
+      const text = body.textContent.trim();
+      if (text !== base) remember(reword(note.id, base, text));
+      save();
+    });
+    return card;
+  }
+
+  // Everything in the margin — notes and the composer alike — stacks in the
+  // reading order of the text it points at, never overlapping.
+  function drawRail() {
+    const railTop = rail.getBoundingClientRect().top + window.scrollY;
+    const anchorTop = (note) => {
+      const el = doc.querySelector(`mark[data-note="${note.id}"], .edit[data-note="${note.id}"]`)
+        || (note.anchor && note.anchor.isConnected ? note.anchor : null);
+      return el ? el.getBoundingClientRect().top + window.scrollY : Infinity;
+    };
+    const shown = notes.filter(
+      (n) => n.verb !== 'suggest' || n.orphaned || n.status === 'resolved');
+    const global = shown.filter((n) => n.page === '*');
+    // Suggestions live in the text; a stranded or answered one also needs a card.
+    const items = shown.filter((n) => n.page !== '*')
+      .map((n) => ({ el: buildNote(n), top: anchorTop(n), id: n.id }));
+    const globalPending = pending && pending.page === '*';
+    if (pending && !globalPending) items.push({ el: compose, top: pending.top, id: Infinity });
+    items.sort((a, b) => a.top - b.top || a.id - b.id);
+
+    rail.innerHTML = '';
+    rail.append(globals);
+    globals.innerHTML = '';
+    if (global.length || globalPending) {
+      const toggle = document.createElement('button');
+      toggle.className = 'toggle';
+      toggle.textContent =
+        `${globalsOpen ? '▾' : '▸'}  ${global.length} project note${global.length === 1 ? '' : 's'}`;
+      toggle.onclick = () => { globalsOpen = !globalsOpen; drawRail(); };
+      globals.append(toggle);
+      if (globalsOpen) for (const note of global) globals.append(buildNote(note));
+      if (globalPending) globals.append(compose);
+    }
+
+    if (!items.length && !globals.children.length) {
+      rail.insertAdjacentHTML('beforeend',
+        '<p class="none">No notes on this page. Hover the margin, or select any text.</p>');
+      return;
+    }
+    let floor = globals.offsetHeight;
+    for (const item of items) {
+      rail.append(item.el);
+      const top = Math.max(item.top === Infinity ? floor + 8 : item.top - railTop, floor + 8);
+      item.el.style.top = top + 'px';
+      floor = top + item.el.offsetHeight;
+    }
+    rail.style.minHeight = floor + 160 + 'px';
+    for (const b of rail.querySelectorAll('[data-kill]'))
+      b.onclick = async () => {
+        const id = +b.dataset.kill;
+        await post({ type: 'delete', id });
+        remember(erase(id));
+        refresh(true);
+      };
+    for (const b of rail.querySelectorAll('[data-reopen]'))
+      b.onclick = async () => {
+        const id = +b.dataset.reopen;
+        await post({ type: 'reopen', id });
+        remember({ undo: { type: 'resolve', id }, redo: { type: 'reopen', id } });
+        refresh(true);
+      };
+  }
+
+  // Diagrams are cached by source: re-rendering a page must not make it grow
+  // under the reader while an async render lands.
+  const drawn = new Map();
+  let mermaidSeq = 0;
+  function drawMermaid() {
+    for (const el of doc.querySelectorAll('pre.mermaid:not([data-drawn])')) {
+      const source = el.textContent;
+      if (drawn.has(source)) {
+        el.innerHTML = drawn.get(source);
+        el.dataset.drawn = '1';
+        continue;
+      }
+      if (!window.__mermaid) continue;
+      el.dataset.drawn = '1';
+      const before = window.scrollY;
+      window.__mermaid.render('m' + (++mermaidSeq), source)
+        .then(({ svg }) => {
+          drawn.set(source, svg);
+          el.innerHTML = svg;
+          window.scrollTo(0, before);
+          drawRail();
+        })
+        .catch(() => { el.dataset.drawn = ''; });
+    }
+  }
+  import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs')
+    .then((m) => {
+      m.default.initialize({ startOnLoad: false, theme: 'neutral', fontFamily: 'ui-sans-serif, sans-serif' });
+      window.__mermaid = m.default;
+      drawMermaid();
+    })
+    .catch(() => { });
+
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  // ── annotating: select, then type / ⌫ / Doubt ─────────────────
+  // Held by reference, not looked up: the composer spends most of its life
+  // detached from the document while the rail is rebuilt around it.
+  const box = $('compose-text'), hint = $('compose-hint');
+  const addBtn = $('compose-save'), doubtBtn = $('compose-doubt');
+
+  // Enter always commits; what it commits depends on what's in the box. Doubt
+  // and suggest both need something quoted, so a project note offers neither.
+  function syncHint() {
+    const typed = !!box.value.trim();
+    const global = !!pending && pending.page === '*';
+    doubtBtn.style.display = global ? 'none' : '';
+    hint.innerHTML = global
+      ? '<kbd>↵</kbd> add'
+      : typed ? '<kbd>↵</kbd> comment' : '<kbd>↵</kbd> doubt · <kbd>⌫</kbd> edit';
+    addBtn.disabled = !typed;
+  }
+  box.addEventListener('input', syncHint);
+
+  // A text selection is banded from its client rects; whole blocks keep the
+  // same wash the hover preview used, so what you saw is what you get.
+  function showPending(target) {
+    clearPending();
+    if (Array.isArray(target)) {
+      wash.className = 'region wash';
+      place(wash, boxOf(target));
+      wash.style.display = 'block';
+      return;
+    }
+    for (const r of target.getClientRects()) {
+      const band = document.createElement('div');
+      band.className = 'pending';
+      band.style.cssText =
+        `left:${r.left + scrollX}px; top:${r.top + scrollY}px; width:${r.width}px; height:${r.height}px`;
+      document.body.append(band);
+    }
+  }
+  function clearPending() {
+    for (const strip of document.querySelectorAll('.pending')) strip.remove();
+    wash.style.display = 'none';
+    band.style.display = 'none';
+    armed = null;
+  }
+
+  function close() {
+    compose.style.display = 'none';
+    pending = null;
+    clearPending();
+    drawRail();
+  }
+
+  function openComposer(spec) {
+    pending = spec;
+    box.value = '';
+    syncHint();
+    compose.style.display = 'block';
+    drawRail();
+    box.focus();
+  }
+
+  // What the reader sees is not all document: struck-out words, rigidity badges
+  // and control glyphs render inline but are not part of the prose.
+  const DEAD = 'del, .kill, .jot, .rig';
+  function quoteFrom(range) {
+    const holder = document.createElement('div');
+    holder.append(range.cloneContents());
+    for (const dead of holder.querySelectorAll(DEAD)) dead.remove();
+    return holder.textContent.trim();
+  }
+
+  function fromSelection() {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.anchorNode || !doc.contains(sel.anchorNode)) return;
+    const host = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement;
+    if (host.closest('.edit')) return;                   // editing a suggestion, not making one
+    const range = sel.getRangeAt(0);
+    const quote = quoteFrom(range);
+    if (!quote) return;                                  // selection held nothing but dead text
+    const block = host.closest('.blk');
+    showPending(range);
+    openComposer({
+      quote, heading: block ? block.dataset.h : '',
+      top: range.getBoundingClientRect().top + window.scrollY,
+    });
+  }
+
+  async function add(verb, text) {
+    if (!pending) return;
+    const { heading, quote, sig, page } = pending;
+    close();
+    window.getSelection().removeAllRanges();
+    const made = await post({ type: 'annotate', verb, page: page || current, heading, quote, sig, text });
+    if (made) remember(create(made.id));
+    refresh(true);
+  }
+
+  // A note about the whole thing, belonging to no page and no paragraph.
+  function projectNote() {
+    clearPending();
+    openComposer({ page: '*', quote: '', heading: '', top: 0 });
+  }
+  $('general').onclick = projectNote;
+  const typingIn = (el) =>
+    el && (el.isContentEditable || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
+
+  document.addEventListener('keydown', (e) => {
+    // Backspace outside a field is browser Back, which unwinds the hash router
+    // and drops the reader at the top of the page.
+    if (e.key === 'Backspace' && !typingIn(document.activeElement)) { e.preventDefault(); return; }
+    if (e.key !== 'n' && e.key !== 'N') return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (typingIn(document.activeElement)) return;
+    e.preventDefault();
+    projectNote();
+  });
+
+  // A suggestion is created the moment you ask for one and saves as you type,
+  // so there is nothing to confirm and nothing to lose by clicking away.
+  async function startSuggest() {
+    if (!pending || pending.sig || !pending.quote) return;   // nothing quoted to rewrite
+    const { heading, quote } = pending;
+    close();
+    window.getSelection().removeAllRanges();
+    // Reuse an existing suggestion on these words instead of stacking another.
+    const already = notes.find((n) => n.verb === 'suggest' && n.quote === quote && n.heading === heading);
+    // ⌫ takes the words out straight away. Typing puts something back; walking
+    // away leaves the deletion standing.
+    const made = already
+      || await post({ type: 'annotate', verb: 'suggest', page: current, heading, quote, text: '' });
+    if (!made) return;
+    if (!already) { remember(create(made.id)); await refresh(true); }
+    const field = doc.querySelector(`.edit[data-note="${made.id}"] .ins`);
+    if (!field) return;
+    field.focus();
+    const caret = document.createRange();
+    caret.selectNodeContents(field);
+    caret.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(caret);
+  }
+
+  document.addEventListener('mouseup', (e) => {
+    if (compose.contains(e.target)) return;
+    setTimeout(fromSelection, 10);
+  });
+  document.addEventListener('keyup', (e) => {
+    if (e.shiftKey && e.key.startsWith('Arrow') && !compose.contains(e.target)) fromSelection();
+  });
+  document.addEventListener('mousedown', (e) => {
+    if (pending && !compose.contains(e.target) && !box.value.trim()) close();
+  });
+
+  addBtn.onclick = () => { if (box.value.trim()) add('comment', box.value.trim()); };
+  doubtBtn.onmousedown = (e) => { e.preventDefault(); add('doubt', box.value.trim()); };
+
+  // Focus moved to the composer the moment you selected, so a plain copy would
+  // read this empty box. Hand it the text that is actually selected.
+  box.addEventListener('copy', (e) => {
+    if (box.value || !pending || !pending.quote) return;
+    e.preventDefault();
+    e.clipboardData.setData('text/plain', pending.quote);
+  });
+
+  box.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { close(); return; }
+    // Nothing typed yet, so ⌫ can't mean delete — it means "let me rewrite this".
+    if (e.key === 'Backspace' && !box.value) { e.preventDefault(); startSuggest(); return; }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const text = box.value.trim();
+      if (!text && pending && pending.page === '*') return;
+      add(text ? 'comment' : 'doubt', text);
+    }
+  });
+
+  $('send').onclick = async () => {
+    await post({ type: 'nudge' });
+    $('send').textContent = 'Notes sent';
+    $('send').disabled = true;
+  };
+
+  // ── live ──────────────────────────────────────────────────────
+  async function refresh(keepScroll) {
+    await loadTree();
+    if (current) await show(current, keepScroll);
+  }
+  async function poll() {
+    const busy = document.activeElement && document.activeElement.isContentEditable;
+    if (pending || busy) return;                             // never re-render mid-note
+    try {
+      const v = JSON.stringify(await (await fetch('/api/version')).json());
+      if (v !== version) { version = v; await refresh(true); }
+    } catch { }
+  }
+  window.addEventListener('hashchange', () => {
+    const path = location.hash.slice(1);
+    if (path && path !== current) show(path);
+  });
+  window.addEventListener('resize', () => { if (current) drawRail(); });
+
+  current = location.hash.slice(1) || null;
+  refresh(false).then(() => setInterval(poll, 700));
+})();
+</script>
+</body>
+</html>
