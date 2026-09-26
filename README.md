@@ -32,6 +32,7 @@ Personal repo, issues for bugs or out-of-date info are welcome, see [CONTRIBUTIN
 | [ldl](skills/ldl/SKILL.md) | Learn by explaining: write your current understanding, get precise corrections. I use it when I realize I don't really get what I'm doing. |
 | [agent-platform](skills/agent-platform/SKILL.md) | An open claw like lightweight self regulating agentic platform on a heartbeat. Design it dynamically in HEART.md. |
 | [protodoc](skills/protodoc/SKILL.md) | A gdocs like experience to create specs interactively as commentable documentations. |
+| [keep-me-in-the-loop](skills/keep-me-in-the-loop/SKILL.md) | For when I zone out on what the llm was saying and want a proper SHORT catch up. |
 
 ## Install
 
