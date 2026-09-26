@@ -17,13 +17,27 @@ Those are examples, not a checklist. Think about what this particular session co
 
 ## Report
 
-Verdict first: **We're there, safe to close.** or **Not yet.** Then a numbered list, one item per thing to do, one line each, so the user can answer by number: the shortest context that makes it make sense, then the action. Nothing outside the list; if it isn't an action, drop it. Offer to handle what the agent can; don't do it unasked.
+Open with one of these verdict banners, copied verbatim in a code block:
 
-If nothing is open, the verdict line is the whole answer.
+```
+    ___                       |> NOT YET
+  _/_|_\_                     |
+ '-O---O-' . . . . . . . . .  |
+```
+
+```
+                        ___   |> WE'RE THERE
+                      _/_|_\_ |  safe to close
+ . . . . . . . . . . '-O---O-'|
+```
+
+After NOT YET, a numbered list, one item per thing to do, one line each, so the user can answer by number: the shortest context that makes it make sense, then the action. Nothing outside the list; if it isn't an action, drop it. Offer to handle what the agent can; don't do it unasked.
+
+If nothing is open, the WE'RE THERE banner is the whole answer.
 
 ## Stay on until clear
 
-A **Not yet.** keeps this skill active. End every following reply with the list, re-checked against the real state: drop what got done, add anything the new work left open. Stop only after saying **We're there, safe to close.**, or when the user calls it off.
+NOT YET keeps this skill active. End every following reply with the banner and the list, re-checked against the real state: drop what got done, add anything the new work left open. Stop only after showing WE'RE THERE, or when the user calls it off.
 
 ## Anti-patterns
 
