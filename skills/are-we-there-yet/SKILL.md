@@ -5,7 +5,7 @@ description: Final sweep for loose threads before the user closes the session, s
 
 # are-we-there-yet
 
-The user wants to close this session and never think about it again. Find whatever stands in the way.
+The user wants to close this session and never think about it again. Find whatever stands in the way, and stay on it until nothing does.
 
 **The test: once this conversation is gone, is anything left half-done, or is there anything the user must do or remember that lives only in the chat?**
 
@@ -17,9 +17,13 @@ Those are examples, not a checklist. Think about what this particular session co
 
 ## Report
 
-Verdict first: **We're there.** or **Not yet.** Then a numbered list, one item per thing to do, one line each, so the user can answer by number: the shortest context that makes it make sense, then the action. Nothing outside the list; if it isn't an action, drop it. Offer to handle what the agent can; don't do it unasked.
+Verdict first: **We're there, safe to close.** or **Not yet.** Then a numbered list, one item per thing to do, one line each, so the user can answer by number: the shortest context that makes it make sense, then the action. Nothing outside the list; if it isn't an action, drop it. Offer to handle what the agent can; don't do it unasked.
 
 If nothing is open, the verdict line is the whole answer.
+
+## Stay on until clear
+
+A **Not yet.** keeps this skill active. End every following reply with the list, re-checked against the real state: drop what got done, add anything the new work left open. Stop only after saying **We're there, safe to close.**, or when the user calls it off.
 
 ## Anti-patterns
 
